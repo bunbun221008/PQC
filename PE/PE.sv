@@ -70,20 +70,23 @@ module pe_array #(
 
     ////////////////////////////////// madd declare ////////////////////////////////////
     logic [WIDTH-1:0] madd_in0[0:NUM-1], madd_in1[0:NUM-1];
-    logic [WIDTH-1:0] madd_cmp[0:NUM-1], madd_sft[0:NUM-1];
-    logic [WIDTH-1:0] madd_add[0:NUM-1], madd_sub[0:NUM-1];
+    logic [WIDTH-1:0] madd_cmp[0:NUM-1], madd_sft[0:NUM-1], madd_add[0:NUM-1], madd_sub[0:NUM-1];
     logic [WIDTH-1:0] madd_out_w[0:NUM-1], madd_out_r[0:NUM-1];
 
 
     ////////////////////////////////// msub declare ////////////////////////////////////
     logic [WIDTH-1:0] msub_in0[0:NUM-1], msub_in1[0:NUM-1];
-    logic [WIDTH-1:0] msub_cmp[0:NUM-1];
-    logic [WIDTH-1:0] msub_add[0:NUM-1], msub_sub[0:NUM-1];
+    logic [WIDTH-1:0] msub_cmp[0:NUM-1], msub_add[0:NUM-1], msub_sub[0:NUM-1];
     logic [WIDTH-1:0] msub_out_w[0:NUM-1], msub_out_r[0:NUM-1];
 
+
+    /////////////////////////////////// mmul declare ///////////////////////////////////
+    logic [WIDTH-1:0] mmul_in0[0:NUM-1], mmul_in1[0:NUM-1];
+    logic [2*WIDTH-1:0] mmul_mul_w[0:NUM-1], mmul_mul_r[0:NUM-1], mmul_red[0:NUM-1], mmul_sft[0:NUM-1];
+    logic [WIDTH-1:0] mmul_out_w[0:NUM-1], mmul_out_r[0:NUM-1];
     
 
-    ////////////////////////////////////////// madd /////////////////////////////////////
+    ////////////////////////////////////////// madd ///////////////////////////////////
     always_comb begin
         for (i = 0; i < NUM; i++) madd_out_w[i] = madd_sft[i];
 
@@ -198,7 +201,7 @@ module pe_array #(
         endcase
     end
 
-    ////////////////////////////////////////// msub /////////////////////////////////////
+    ////////////////////////////////////////// msub ///////////////////////////////////
     always_comb begin
         for (i = 0; i < NUM; i++) msub_out_w[i] = msub_add[i];
 
@@ -306,11 +309,48 @@ module pe_array #(
                     msub_add[i] = msub_cmp[i];
                 end
             end
+
+            default: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i];
+                    msub_cmp[i] = ((Q - Gamma2) >= msub_sub[i])? 1 : 0;
+                    msub_add[i] = msub_cmp[i];
+                end
+            end
         endcase
     end
 
+    ////////////////////////////////////////// mmul ///////////////////////////////////
+    MR 
+    
+    always_comb begin
+        for (i = 0; i < NUM; i++) mmul_out_w[i] = mmul_sft[i];
 
-    ///////////////////////////////////// sequential circuits //////////////////////////////
+        case (instr)
+            MMUL: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * mmul_in1[i];
+                    mmul_red[i] = mmul_mul[i];
+                end
+            end
+
+            KMUL: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul[i] = mmul_in0[i] * mmul_in1[i];
+                    mmul_red[i] = mmul_mul[i];
+                end
+            end
+
+            default: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul[i] = mmul_in0[i] * mmul_in1[i];
+                    mmul_red[i] = mmul_mul[i];
+                end
+            end
+        endcase
+    end
+
+    ///////////////////////////////////// sequential circuits /////////////////////////
     always_ff @(posedge clk) begin
         if (rst) begin
             for (int i = 0; i < NUM; i++) begin
