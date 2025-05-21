@@ -69,16 +69,23 @@ module pe_array #(
 
 
     ////////////////////////////////// madd declare ////////////////////////////////////
-    logic [WIDTH-1:0] madd_in[0:NUM-1], madd_in1[0:NUM-1];
+    logic [WIDTH-1:0] madd_in0[0:NUM-1], madd_in1[0:NUM-1];
     logic [WIDTH-1:0] madd_cmp[0:NUM-1], madd_sft[0:NUM-1];
-    logic [WIDTH:0] madd_add[0:NUM-1], madd_sub[0:NUM-1];
+    logic [WIDTH-1:0] madd_add[0:NUM-1], madd_sub[0:NUM-1];
     logic [WIDTH-1:0] madd_out_w[0:NUM-1], madd_out_r[0:NUM-1];
+
+
+    ////////////////////////////////// msub declare ////////////////////////////////////
+    logic [WIDTH-1:0] msub_in0[0:NUM-1], msub_in1[0:NUM-1];
+    logic [WIDTH-1:0] msub_cmp[0:NUM-1];
+    logic [WIDTH-1:0] msub_add[0:NUM-1], msub_sub[0:NUM-1];
+    logic [WIDTH-1:0] msub_out_w[0:NUM-1], msub_out_r[0:NUM-1];
 
     
 
     ////////////////////////////////////////// madd /////////////////////////////////////
     always_comb begin
-        for (i = 0; i < NUM; i++) madd_out_w = madd_sft;
+        for (i = 0; i < NUM; i++) madd_out_w[i] = madd_sft[i];
 
         case (instr)
             MADD: begin
@@ -193,24 +200,111 @@ module pe_array #(
 
     ////////////////////////////////////////// msub /////////////////////////////////////
     always_comb begin
+        for (i = 0; i < NUM; i++) msub_out_w[i] = msub_add[i];
+
         case (instr)
             MSUB: begin
-                for (int i = 0; i < NUM; i++) madd_sub = madd_in0[i] - madd_in1[i];
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i] - msub_in1[i];
+                    msub_cmp[i] = (msub_sub[i][WIDTH-1])? Q : 0;
+                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                end
             end
                 
             KMUL, KMAC: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i] - Q;
+                    msub_cmp[i] = (msub_sub[i][WIDTH-1])? Q : 0;
+                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                end
             end
-                
-            DCP2, CMP-1, CMP-4, CMP-5, CMP-10, CMP-11: begin
+
+            DCP2: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i] - Alpha;
+                    msub_cmp[i] = (msub_sub[i][WIDTH-1])? Alpha : 0;
+                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                end
+            end
+
+            CMP_1: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i] - (1<<1);
+                    msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<1) : 0;
+                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                end
+            end
+
+            CMP_4: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i] - (1<<4);
+                    msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<4) : 0;
+                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                end
+            end
+
+            CMP_5: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i] - (1<<5);
+                    msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<5) : 0;
+                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                end
+            end
+
+            CMP_10: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i] - (1<<10);
+                    msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<10) : 0;
+                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                end
+            end
+
+            CMP_11: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i] - (1<<11);
+                    msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<11) : 0;
+                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                end
             end
                
             MHINT: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i];
+                    msub_cmp[i] = (msub_sub[i] >= (Gamma2 + 1))? 1 : 0;
+                    msub_add[i] = msub_cmp[i] | ((msub_sub[i] == (Q-Gamma2))<<1);
+                end
             end
                 
             UHINT: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i] - msub_in1[i];
+                    msub_cmp[i] = (msub_sub[i][WIDTH-1])? Alpha : 0;
+                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                end
             end
                 
-            CHKZ, CHKW0, CHKH: begin
+            CHKZ: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i];
+                    msub_cmp[i] = ((Q - (Gamma1 - Beta)) >= msub_sub[i])? 1 : 0;
+                    msub_add[i] = msub_cmp[i];
+                end
+            end
+
+            CHKW0: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i];
+                    msub_cmp[i] = ((Q - (Gamma2 - Beta)) >= msub_sub[i])? 1 : 0;
+                    msub_add[i] = msub_cmp[i];
+                end
+            end
+
+            CHKH: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_sub[i] = msub_in0[i];
+                    msub_cmp[i] = ((Q - Gamma2) >= msub_sub[i])? 1 : 0;
+                    msub_add[i] = msub_cmp[i];
+                end
             end
         endcase
     end
@@ -221,10 +315,12 @@ module pe_array #(
         if (rst) begin
             for (int i = 0; i < NUM; i++) begin
                 madd_out_r[i] <= 0;
+                msub_out_r[i] <= 0;
             end
         end else begin
             for (int i = 0; i < NUM; i++) begin
                 madd_out_r[i] <= madd_out_w[i];
+                msub_out_r[i] <= msub_out_w[i];
             end
         end
     end
