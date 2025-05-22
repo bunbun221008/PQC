@@ -101,30 +101,6 @@ module pe_array #(
     logic [WIDTH-1:0] data_out_p5_w[0:NUM-1][0:OUT_NUM-1], data_out_p5_r[0:NUM-1][0:OUT_NUM-1];
     logic [WIDTH-1:0] data_out_p6_w[0:NUM-1][0:OUT_NUM-1], data_out_p6_r[0:NUM-1][0:OUT_NUM-1];
 
-
-
-    /////////////////////////////////// data_in, data_out pipeline //////////////////////////////////
-    always_comb begin
-        for (i = 0; i < NUM; i++) begin
-            for (j = 0; j < IN_NUM; j++) begin
-                data_in_p1_w[i][j] = data_in[i][j];
-                data_in_p2_w[i][j] = data_in_p1_r[i][j];
-                data_in_p3_w[i][j] = data_in_p2_r[i][j];
-                data_in_p4_w[i][j] = data_in_p3_r[i][j];
-                data_in_p5_w[i][j] = data_in_p4_r[i][j];
-                data_in_p6_w[i][j] = data_in_p5_r[i][j];
-            end
-
-            for (j = 0; j < OUT_NUM; j++) begin
-                data_out_p2_w[i][j] = data_out_p1_r[i][j];
-                data_out_p3_w[i][j] = data_out_p2_r[i][j];
-                data_out_p4_w[i][j] = data_out_p3_r[i][j];
-                data_out_p5_w[i][j] = data_out_p4_r[i][j];
-                data_out_p6_w[i][j] = data_out_p5_r[i][j];
-            end
-        end
-    end
-
     ////////////////////////////////////////// madd ///////////////////////////////////
     always_comb begin
         for (i = 0; i < NUM; i++) madd_out_w[i] = madd_sft[i];
@@ -490,7 +466,7 @@ module pe_array #(
     end
 
 
-    ////////////////////////////////////////// input output logic///////////////////////////////////
+    ////////////////////////////////////////// exe logic///////////////////////////////////
     always_comb begin
         for (i = 0; i < NUM; i++) begin
             madd_in0[i] = data_in[i][0];
@@ -512,6 +488,11 @@ module pe_array #(
             end
             for (j = 0; j < OUT_NUM; j++) begin
                 data_out_p1_w[i][j] = 0;
+                data_out_p2_w[i][j] = data_out_p1_r[i][j];
+                data_out_p3_w[i][j] = data_out_p2_r[i][j];
+                data_out_p4_w[i][j] = data_out_p3_r[i][j];
+                data_out_p5_w[i][j] = data_out_p4_r[i][j];
+                data_out_p6_w[i][j] = data_out_p5_r[i][j];
             end
         end
 
@@ -614,19 +595,67 @@ module pe_array #(
                 end            
             end
 
-            DCP3: begin
+            DCP3: begin // 4 stages
                 for (i = 0; i < NUM; i++) begin
-                    // mmul_in0[i] = data_in[i][1];
-                    // mmul_in1[i] = 0;
-                    // msub_in0[i] = mmul_out_r[i];
-                    // msub_in1[i] = 0;
-                    
+                    mmul_in0[i] = data_in[i][1];
+                    mmul_in1[i] = 0;
+                    msub_in0[i] = data_in_p2_r[i][0];
+                    msub_in1[i] = mmul_out_r[i];
+                    madd_in0[i] = msub_out_r[i];
+                    madd_in1[i] = 0;
+
+                    data_out_p1_w[i][0] = msub_out_r[i];
+                    data_out[i][0] = data_out_p1_r[i][0];
+                    data_out[i][1] = madd_out_r[i];
                 end            
             end
 
+            MHINT: begin // 1 stages
+                for (i = 0; i < NUM; i++) begin
+                    msub_in0[i] = data_in[i][0];
+                    msub_in1[i] = 0;
+                    madd_in0[i] = data_in[i][0];
+                    madd_in1[i] = data_in[i][1];
+
+                    data_out[i][0] = ((msub_out_r[i]>>1)&(madd_out_r[i]>>1)) | ((msub_out_r[i][0])&(madd_out_r[i][0]));
+                end            
+            end
+
+            UHINT: begin // 2 stages
+                for (i = 0; i < NUM; i++) begin
+                    madd_in0[i] = data_in[i][0];
+                    madd_in1[i] = data_in[i][2];
+                    msub_in0[i] = data_in_p1_r[i][1];
+                    msub_in1[i] = madd_out_r[i];
+
+                    data_out[i][0] = msub_out_r[i];
+                end            
+            end
+
+            CHKZ, CHKW0, CHKH: begin // 1 stages
+                for (i = 0; i < NUM; i++) begin
+                    madd_in0[i] = data_in[i][0];
+                    madd_in1[i] = 0;
+                    msub_in0[i] = data_in[i][0];
+                    msub_in1[i] = 0;
+
+                    data_out[i][0] = msub_out_r[i] & madd_out_r[i];
+                end            
+            end
+
+            DCMP_1, DCMP_4, DCMP_5, DCMP_10, DCMP_11: begin // 3 stages
+                for (i = 0; i < NUM; i++) begin
+                    mmul_in0[i] = data_in[i][0];
+                    mmul_in1[i] = 0;
+                    madd_in0[i] = mmul_out_r[i];
+                    madd_in1[i] = 0;
+
+                    data_out[i][0] = madd_out_r[i];
+                end            
+            end
 
             default: begin
-                for (i = 0; i < NUM; i++) data_out[i][0] = mmul_out_r[i];
+                for (i = 0; i < NUM; i++) data_out[i][0] = madd_out_r[i];
             end
         endcase
     end
