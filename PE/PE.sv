@@ -115,15 +115,6 @@ module pe_array #(
                 end
             end
                 
-            ADD: begin
-                for (i = 0; i < NUM; i++) begin
-                    madd_add[i] = madd_in0[i] + madd_in1[i];
-                    madd_cmp[i] = 0
-                    madd_sub[i] = madd_add[i] - madd_cmp[i];
-                    madd_sft[i] = madd_sub[i];
-                end
-            end
-                
             P2R: begin
                 for (i = 0; i < NUM; i++) begin
                     madd_add[i] = madd_in0[i] + ((1<<(D-1)) - 1);
@@ -142,7 +133,7 @@ module pe_array #(
                 end
             end
                 
-            DCP2, DCMP-1, DCMP-4, DCMP-5, DCMP-10, DCMP-11, CMP-1, CMP-4, CMP-5, CMP-10, CMP-11: begin
+            DCP2, DCMP_1, DCMP_4, DCMP_5, DCMP_10, DCMP_11, CMP_1, CMP_4, CMP_5, CMP_10, CMP_11: begin
                 for (i = 0; i < NUM; i++) begin
                     madd_add[i] = madd_in0[i] + 1;
                     madd_cmp[i] = 0;
