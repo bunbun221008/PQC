@@ -59,7 +59,7 @@ module pe_array #(
 );
 
     ///////////////////////////////// parameter declare/////////////////////////////////////
-    integer i;
+    integer i, j;
     logic [WIDTH-1:0] Q;
     logic [WIDTH-1:0] D;
     logic [WIDTH-1:0] Alpha;
@@ -83,15 +83,38 @@ module pe_array #(
     /////////////////////////////////// mmul declare ///////////////////////////////////
     logic [WIDTH-1:0] mmul_in0[0:NUM-1], mmul_in1[0:NUM-1];
     logic [2*WIDTH-1:0] mmul_mul_w[0:NUM-1], mmul_mul_r[0:NUM-1], mmul_red[0:NUM-1], mmul_sft[0:NUM-1];
+    logic [WIDTH-1:0] MR_output[0:NUM-1];
     logic [WIDTH-1:0] mmul_out_w[0:NUM-1], mmul_out_r[0:NUM-1];
-    
+
+    ////////////////////////////// data_in pipeline declare //////////////////////////////////
+    logic [WIDTH-1:0] data_in_p1_w[0:NUM-1][0:IN_NUM-1], data_in_p1_r[0:NUM-1][0:IN_NUM-1];
+    logic [WIDTH-1:0] data_in_p2_w[0:NUM-1][0:IN_NUM-1], data_in_p2_r[0:NUM-1][0:IN_NUM-1];
+    logic [WIDTH-1:0] data_in_p3_w[0:NUM-1][0:IN_NUM-1], data_in_p3_r[0:NUM-1][0:IN_NUM-1];
+    logic [WIDTH-1:0] data_in_p4_w[0:NUM-1][0:IN_NUM-1], data_in_p4_r[0:NUM-1][0:IN_NUM-1];
+    logic [WIDTH-1:0] data_in_p5_w[0:NUM-1][0:IN_NUM-1], data_in_p5_r[0:NUM-1][0:IN_NUM-1];
+    logic [WIDTH-1:0] data_in_p6_w[0:NUM-1][0:IN_NUM-1], data_in_p6_r[0:NUM-1][0:IN_NUM-1];
+
+
+    /////////////////////////////////// data_in pipeline //////////////////////////////////
+    always_comb begin
+        for (i = 0; i < NUM; i++) begin
+            for (j = 0; j < IN_NUM; j++) begin
+                data_in_p1_w[i][j] = data_in[i][j];
+                data_in_p2_w[i][j] = data_in_p1_r[i][j];
+                data_in_p3_w[i][j] = data_in_p2_r[i][j];
+                data_in_p4_w[i][j] = data_in_p3_r[i][j];
+                data_in_p5_w[i][j] = data_in_p4_r[i][j];
+                data_in_p6_w[i][j] = data_in_p5_r[i][j];
+            end
+        end
+    end
 
     ////////////////////////////////////////// madd ///////////////////////////////////
     always_comb begin
         for (i = 0; i < NUM; i++) madd_out_w[i] = madd_sft[i];
 
         case (instr)
-            MADD: begin
+            MADD, MMAC, KMAC, CT_BFO, GS_BFO: begin
                 for (i = 0; i < NUM; i++) begin
                     madd_add[i] = madd_in0[i] + madd_in1[i];
                     madd_cmp[i] = (madd_add[i] >= Q)? Q : 0;
@@ -206,7 +229,7 @@ module pe_array #(
         for (i = 0; i < NUM; i++) msub_out_w[i] = msub_add[i];
 
         case (instr)
-            MSUB: begin
+            MSUB, CT_BFO, GS_BFO, P2R, DCP3: begin
                 for (i = 0; i < NUM; i++) begin
                     msub_sub[i] = msub_in0[i] - msub_in1[i];
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Q : 0;
@@ -321,31 +344,210 @@ module pe_array #(
     end
 
     ////////////////////////////////////////// mmul ///////////////////////////////////
-    MR 
+    genvar gi;
+    generate
+        for (gi = 0; gi < NUM; gi = gi + 1) begin : PE_ARRAY
+            MR mr (
+                .clk(clk),
+                .mode((alg == DSA_44 || alg == DSA_65 || alg == DSA_87)? 1:0),
+                .d(mmul_mul_r[gi]),
+                .MR_output(MR_output[gi]),
+            );
+        end
+    endgenerate
     
     always_comb begin
         for (i = 0; i < NUM; i++) mmul_out_w[i] = mmul_sft[i];
 
         case (instr)
-            MMUL: begin
+            MMUL, MMAC, CT_BFO, GS_BFO: begin
                 for (i = 0; i < NUM; i++) begin
                     mmul_mul_w[i] = mmul_in0[i] * mmul_in1[i];
-                    mmul_red[i] = mmul_mul[i];
+                    mmul_red[i] = MR_output[i];
+                    mmul_sft[i] = mmul_red[i];
                 end
             end
 
-            KMUL: begin
+            KMUL, KMAC: begin
                 for (i = 0; i < NUM; i++) begin
-                    mmul_mul[i] = mmul_in0[i] * mmul_in1[i];
-                    mmul_red[i] = mmul_mul[i];
+                    mmul_mul_w[i] = (mmul_in0[i][WIDTH-1:12] * mmul_in1[i][WIDTH-1:12]) + 
+                                  (mmul_in0[i][11:0] * mmul_in1[i][11:0]);
+                    mmul_red[i] = MR_output[i];
+                    mmul_sft[i] = mmul_red[i];
+                end
+            end
+
+            DCP2: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * ((Alpha == 16)?  1025 : 11275);
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i] >> ((Alpha == 16)?  21 : 23);
+                end
+            end
+            DCMP_1: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * Q;
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i];
+                end
+            end
+            DCMP_4: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * Q;
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i] >> 3;
+                end
+            end
+            DCMP_5: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * Q;
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i] >> 4;
+                end
+            end
+            DCMP_10: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * Q;
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i] >> 9;
+                end
+            end
+            DCMP_11: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * Q;
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i] >> 10;
+                end
+            end
+            CMP_1: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * 10079;
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i] >> 23;
+                end
+            end
+            CMP_4: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * 315;
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i] >> 15;
+                end
+            end
+            CMP_5: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * 630;
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i] >> 15;
+                end
+            end
+            CMP_10: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * 5160669;
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i] >> 23;
+                end
+            end
+            CMP_11: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * 5160670;
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i] >> 22;
+                end
+            end
+
+            DCP3: begin
+                for (i = 0; i < NUM; i++) begin
+                    mmul_mul_w[i] = mmul_in0[i] * (2 * Gamma2);
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i];
                 end
             end
 
             default: begin
                 for (i = 0; i < NUM; i++) begin
-                    mmul_mul[i] = mmul_in0[i] * mmul_in1[i];
-                    mmul_red[i] = mmul_mul[i];
+                    mmul_mul_w[i] = mmul_in0[i] * (2 * Gamma2);
+                    mmul_red[i] = mmul_mul_r[i];
+                    mmul_sft[i] = mmul_red[i];
                 end
+            end
+        endcase
+    end
+
+
+    ////////////////////////////////////////// input output logic///////////////////////////////////
+    always_comb begin
+        for (i = 0; i < NUM; i++) begin
+            madd_in0[i] = data_in[i][0];
+            madd_in1[i] = data_in[i][1];
+            msub_in0[i] = data_in[i][0];
+            msub_in1[i] = data_in[i][1];
+            mmul_in0[i] = data_in[i][0];
+            mmul_in1[i] = data_in[i][1];
+
+            data_out[i][0] = 0;
+            data_out[i][1] = 0;
+        end
+
+        case (instr)
+            MADD: begin
+                for (i = 0; i < NUM; i++) data_out[i][0] = madd_out_r[i];
+            end
+
+            MSUB: begin
+                for (i = 0; i < NUM; i++) data_out[i][0] = msub_out_r[i];
+         
+            end
+
+            MMUL: begin
+                for (i = 0; i < NUM; i++) data_out[i][0] = mmul_out_r[i];
+            end
+
+            KMUL: begin
+                for (i = 0; i < NUM; i++) begin
+                    msub_in0[i] = mmul_out_r[i];
+                    msub_in1[i] = 0;
+                    data_out[i][0] = msub_out_r[i];
+                end
+            end
+
+            KMAC: begin // 6 stages
+                for (i = 0; i < NUM; i++) begin
+                    msub_in0[i] = mmul_out_r[i];
+                    msub_in1[i] = 0;
+                    madd_in0[i] = msub_out_r[i];
+                    madd_in1[i] = data_in_p5_r[i][2];
+                    data_out[i][0] = madd_out_r[i];
+                end
+            end
+
+            CT_BFO: begin
+                for (i = 0; i < NUM; i++) begin
+                    // mmul_in0[i] = data_in[i][1];
+                    // mmul_in1[i] = data_in[i][2];
+                    // madd_in0[i] = data_in[i][0];
+                    // madd_in1[i] = mmul_out_r[i];
+                    // msub_in0[i] = data_in[i][0];
+                    // msub_in1[i] = mmul_out_r[i];
+                    // data_out[i][0] = madd_out_r[i];
+                    // data_out[i][1] = msub_out_r[i];
+                end            
+            end
+
+            GS_BFO: begin
+                for (i = 0; i < NUM; i++) begin
+                    // madd_in0[i] = data_in[i][0];
+                    // madd_in1[i] = data_in[i][1];
+                    // msub_in0[i] = data_in[i][0];
+                    // msub_in1[i] = data_in[i][1];
+                    // mmul_in0[i] = msub_out_r[i];
+                    // mmul_in1[i] = data_in[i][2];
+                    // data_out[i][0] = madd_out_r[i];
+                    // data_out[i][1] = msub_out_r[i];
+                end            
+            end
+
+            default: begin
+                for (i = 0; i < NUM; i++) data_out[i][0] = mmul_out_r[i];
             end
         endcase
     end
@@ -356,11 +558,32 @@ module pe_array #(
             for (int i = 0; i < NUM; i++) begin
                 madd_out_r[i] <= 0;
                 msub_out_r[i] <= 0;
+                mmul_out_r[i] <= 0;
+                mmul_mul_r[i] <= 0;
+                for (int j = 0; j < IN_NUM; j++) begin
+                    data_in_p1_r[i][j] <= 0;
+                    data_in_p2_r[i][j] <= 0;
+                    data_in_p3_r[i][j] <= 0;
+                    data_in_p4_r[i][j] <= 0;
+                    data_in_p5_r[i][j] <= 0;
+                    data_in_p6_r[i][j] <= 0;
+                end
+
             end
         end else begin
             for (int i = 0; i < NUM; i++) begin
                 madd_out_r[i] <= madd_out_w[i];
                 msub_out_r[i] <= msub_out_w[i];
+                mmul_out_r[i] <= mmul_out_w[i];
+                mmul_mul_r[i] <= mmul_mul_w[i];
+                for (int j = 0; j < IN_NUM; j++) begin
+                    data_in_p1_r[i][j] <= data_in_p1_w[i][j];
+                    data_in_p2_r[i][j] <= data_in_p2_w[i][j];
+                    data_in_p3_r[i][j] <= data_in_p3_w[i][j];
+                    data_in_p4_r[i][j] <= data_in_p4_w[i][j];
+                    data_in_p5_r[i][j] <= data_in_p5_w[i][j];
+                    data_in_p6_r[i][j] <= data_in_p6_w[i][j];
+                end
             end
         end
     end
