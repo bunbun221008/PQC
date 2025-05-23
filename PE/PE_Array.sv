@@ -1,65 +1,58 @@
-// let's goooo
+
+// typedef enum logic [4:0] {
+//     MADD    = 5'd0,
+//     MSUB    = 5'd1,
+//     MMUL    = 5'd2,
+//     MMAC    = 5'd3,
+//     KMUL    = 5'd4,
+//     KMAC    = 5'd5,
+//     CT_BFO  = 5'd6,
+//     GS_BFO  = 5'd7,
+//     P2R     = 5'd8,
+//     DCP1    = 5'd9,
+//     DCP2    = 5'd10,
+//     DCP3    = 5'd11,
+//     MHINT   = 5'd12,
+//     UHINT   = 5'd13,
+//     CHKZ    = 5'd14,
+//     CHKW0   = 5'd15,
+//     CHKH    = 5'd16,
+//     DCMP_1  = 5'd17,
+//     DCMP_4  = 5'd18,
+//     DCMP_5  = 5'd19,
+//     DCMP_10 = 5'd20,
+//     DCMP_11 = 5'd21,
+//     CMP_1   = 5'd22,
+//     CMP_4   = 5'd23,
+//     CMP_5   = 5'd24,
+//     CMP_11  = 5'd25
+// } pe_instr_t;
+
+// typedef enum logic [4:0] {
+//     KEM_512 = 5'd0,
+//     KEM_768 = 5'd1,
+//     KEM_1024 = 5'd2,
+//     DSA_44 = 5'd3,
+//     DSA_65 = 5'd4,
+//     DSA_87 = 5'd5
+// } pe_alg_t;
 
 
-// "MADD","MSUB","MMUL","MMAC","KMUL","KMAC","CT-BFO","GS-BFO","P2R",
-//         "DCP1","DCP2","DCP3","MHINT","UHINT","CHKZ","CHKW0","CHKH",
-//         "DCMP-1","DCMP-4","DCMP-5","DCMP-10","DCMP-11",
-//         "CMP-1","CMP-4","CMP-5","CMP-10","CMP-11"
-typedef enum logic [4:0] {
-    MADD    = 5'd0,
-    MSUB    = 5'd1,
-    MMUL    = 5'd2,
-    MMAC    = 5'd3,
-    KMUL    = 5'd4,
-    KMAC    = 5'd5,
-    CT_BFO  = 5'd6,
-    GS_BFO  = 5'd7,
-    P2R     = 5'd8,
-    DCP1    = 5'd9,
-    DCP2    = 5'd10,
-    DCP3    = 5'd11,
-    MHINT   = 5'd12,
-    UHINT   = 5'd13,
-    CHKZ    = 5'd14,
-    CHKW0   = 5'd15,
-    CHKH    = 5'd16,
-    DCMP_1  = 5'd17,
-    DCMP_4  = 5'd18,
-    DCMP_5  = 5'd19,
-    DCMP_10 = 5'd20,
-    DCMP_11 = 5'd21,
-    CMP_1   = 5'd22,
-    CMP_4   = 5'd23,
-    CMP_5   = 5'd24,
-    CMP_11  = 5'd25
-} pe_instr_t;
-
-typedef enum logic [4:0] {
-    KEM_512 = 5'd0,
-    KEM_768 = 5'd1,
-    KEM_1024 = 5'd2,
-    DSA_44 = 5'd3,
-    DSA_65 = 5'd4,
-    DSA_87 = 5'd5
-} pe_alg_t;
-
-
-module pe_array #(
+module PE_Array #(
     parameter NUM = 4,
     parameter OUT_NUM = 2,
     parameter IN_NUM = 3,
-    parameter WIDTH = 32
+    parameter WIDTH = 24
 ) (
     input logic clk,
     input logic rst,
     input pe_alg_t alg,
     input pe_instr_t instr,
     input logic [WIDTH-1:0] data_in[0:NUM-1][0:IN_NUM-1],
-    output logic [WIDTH-1:0] data_out[0:NUM-1][0:OUT_NUM-1],
+    output logic [WIDTH-1:0] data_out[0:NUM-1][0:OUT_NUM-1]
 );
 
     ///////////////////////////////// parameter declare/////////////////////////////////////
-    integer i, j;
     logic [WIDTH-1:0] Q;
     logic [WIDTH-1:0] D;
     logic [WIDTH-1:0] Alpha;
@@ -165,11 +158,10 @@ module pe_array #(
 
     ////////////////////////////////////////// madd ///////////////////////////////////
     always_comb begin
-        for (i = 0; i < NUM; i++) madd_out_w[i] = madd_sft[i];
-
+        integer i, j;
         case (instr)
             MADD, MMAC, KMAC, CT_BFO, GS_BFO: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i] + madd_in1[i];
                     madd_cmp[i] = (madd_add[i] >= Q)? Q : 0;
                     madd_sub[i] = madd_add[i] - madd_cmp[i];
@@ -178,7 +170,7 @@ module pe_array #(
             end
                 
             P2R: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i] + ((1<<(D-1)) - 1);
                     madd_cmp[i] = 0;
                     madd_sub[i] = madd_add[i] - madd_cmp[i];
@@ -187,7 +179,7 @@ module pe_array #(
             end
                 
             DCP1: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i] + 127;
                     madd_cmp[i] = 0;
                     madd_sub[i] = madd_add[i] - madd_cmp[i];
@@ -196,7 +188,7 @@ module pe_array #(
             end
                 
             DCP2, DCMP_1, DCMP_4, DCMP_5, DCMP_10, DCMP_11, CMP_1, CMP_4, CMP_5, CMP_10, CMP_11: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i] + 1;
                     madd_cmp[i] = 0;
                     madd_sub[i] = madd_add[i] - madd_cmp[i];
@@ -205,7 +197,7 @@ module pe_array #(
             end
                
             DCP3: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
                     madd_cmp[i] = (((Q-1)>>1) >= madd_add[i])? 1:0;
                     madd_sub[i] = madd_cmp[i] & (madd_add[i] != 0);
@@ -214,7 +206,7 @@ module pe_array #(
             end
                 
             MHINT: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
                     madd_cmp[i] = ((Q - 1 - Gamma2) >= madd_add[i])? 1:0;
                     madd_sub[i] = madd_cmp[i] | ((madd_in1[i] != 0)<<1);
@@ -223,7 +215,7 @@ module pe_array #(
             end
                 
             UHINT: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
                     madd_cmp[i] = (madd_add[i] >= 1)? (Alpha - 1):0;
                     madd_sub[i] = madd_cmp[i];
@@ -232,7 +224,7 @@ module pe_array #(
             end
                 
             CHKZ: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
                     madd_cmp[i] = (madd_add[i] >= (Gamma1 - Beta))? 1:0;
                     madd_sub[i] = madd_cmp[i];
@@ -241,7 +233,7 @@ module pe_array #(
             end
 
             CHKW0: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
                     madd_cmp[i] = (madd_add[i] >= (Gamma2 - Beta))? 1:0;
                     madd_sub[i] = madd_cmp[i];
@@ -250,7 +242,7 @@ module pe_array #(
             end
 
             CHKH: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
                     madd_cmp[i] = (madd_add[i] >= (Gamma2))? 1:0;
                     madd_sub[i] = madd_cmp[i];
@@ -259,7 +251,7 @@ module pe_array #(
             end
 
             default: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
                     madd_cmp[i] = (madd_add[i] >= (Gamma2))? 1:0;
                     madd_sub[i] = madd_cmp[i];
@@ -267,15 +259,16 @@ module pe_array #(
                 end
             end
         endcase
+
+        for (i = 0; i < NUM; i = i+1) madd_out_w[i] = madd_sft[i];
     end
 
     ////////////////////////////////////////// msub ///////////////////////////////////
     always_comb begin
-        for (i = 0; i < NUM; i++) msub_out_w[i] = msub_add[i];
-
+        integer i, j;
         case (instr)
             MSUB, CT_BFO, GS_BFO, P2R, DCP3: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i] - msub_in1[i];
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Q : 0;
                     msub_add[i] = msub_sub[i] + msub_cmp[i];
@@ -283,7 +276,7 @@ module pe_array #(
             end
                 
             KMUL, KMAC: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i] - Q;
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Q : 0;
                     msub_add[i] = msub_sub[i] + msub_cmp[i];
@@ -291,7 +284,7 @@ module pe_array #(
             end
 
             DCP2: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i] - Alpha;
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Alpha : 0;
                     msub_add[i] = msub_sub[i] + msub_cmp[i];
@@ -299,7 +292,7 @@ module pe_array #(
             end
 
             CMP_1: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i] - (1<<1);
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<1) : 0;
                     msub_add[i] = msub_sub[i] + msub_cmp[i];
@@ -307,7 +300,7 @@ module pe_array #(
             end
 
             CMP_4: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i] - (1<<4);
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<4) : 0;
                     msub_add[i] = msub_sub[i] + msub_cmp[i];
@@ -315,7 +308,7 @@ module pe_array #(
             end
 
             CMP_5: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i] - (1<<5);
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<5) : 0;
                     msub_add[i] = msub_sub[i] + msub_cmp[i];
@@ -323,7 +316,7 @@ module pe_array #(
             end
 
             CMP_10: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i] - (1<<10);
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<10) : 0;
                     msub_add[i] = msub_sub[i] + msub_cmp[i];
@@ -331,7 +324,7 @@ module pe_array #(
             end
 
             CMP_11: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i] - (1<<11);
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<11) : 0;
                     msub_add[i] = msub_sub[i] + msub_cmp[i];
@@ -339,7 +332,7 @@ module pe_array #(
             end
                
             MHINT: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
                     msub_cmp[i] = (msub_sub[i] >= (Gamma2 + 1))? 1 : 0;
                     msub_add[i] = msub_cmp[i] | ((msub_sub[i] == (Q-Gamma2))<<1);
@@ -347,7 +340,7 @@ module pe_array #(
             end
                 
             UHINT: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i] - msub_in1[i];
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Alpha : 0;
                     msub_add[i] = msub_sub[i] + msub_cmp[i];
@@ -355,7 +348,7 @@ module pe_array #(
             end
                 
             CHKZ: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
                     msub_cmp[i] = ((Q - (Gamma1 - Beta)) >= msub_sub[i])? 1 : 0;
                     msub_add[i] = msub_cmp[i];
@@ -363,7 +356,7 @@ module pe_array #(
             end
 
             CHKW0: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
                     msub_cmp[i] = ((Q - (Gamma2 - Beta)) >= msub_sub[i])? 1 : 0;
                     msub_add[i] = msub_cmp[i];
@@ -371,7 +364,7 @@ module pe_array #(
             end
 
             CHKH: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
                     msub_cmp[i] = ((Q - Gamma2) >= msub_sub[i])? 1 : 0;
                     msub_add[i] = msub_cmp[i];
@@ -379,13 +372,15 @@ module pe_array #(
             end
 
             default: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
                     msub_cmp[i] = ((Q - Gamma2) >= msub_sub[i])? 1 : 0;
                     msub_add[i] = msub_cmp[i];
                 end
             end
         endcase
+
+        for (i = 0; i < NUM; i = i+1) msub_out_w[i] = msub_add[i];
     end
 
     ////////////////////////////////////////// mmul ///////////////////////////////////
@@ -396,17 +391,16 @@ module pe_array #(
                 .clk(clk),
                 .mode((alg == DSA_44 || alg == DSA_65 || alg == DSA_87)? 1:0),
                 .d(mmul_mul_r[gi]),
-                .MR_output(MR_output[gi]),
+                .MR_output(MR_output[gi])
             );
         end
     endgenerate
     
     always_comb begin
-        for (i = 0; i < NUM; i++) mmul_out_w[i] = mmul_sft[i];
-
+        integer i, j;
         case (instr)
             MMUL, MMAC, CT_BFO, GS_BFO: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * mmul_in1[i];
                     mmul_red[i] = MR_output[i];
                     mmul_sft[i] = mmul_red[i];
@@ -414,7 +408,7 @@ module pe_array #(
             end
 
             KMUL, KMAC: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = (mmul_in0[i][WIDTH-1:12] * mmul_in1[i][WIDTH-1:12]) + 
                                   (mmul_in0[i][11:0] * mmul_in1[i][11:0]);
                     mmul_red[i] = MR_output[i];
@@ -423,77 +417,77 @@ module pe_array #(
             end
 
             DCP2: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * ((Alpha == 16)?  1025 : 11275);
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> ((Alpha == 16)?  21 : 23);
                 end
             end
             DCMP_1: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * Q;
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i];
                 end
             end
             DCMP_4: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * Q;
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 3;
                 end
             end
             DCMP_5: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * Q;
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 4;
                 end
             end
             DCMP_10: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * Q;
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 9;
                 end
             end
             DCMP_11: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * Q;
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 10;
                 end
             end
             CMP_1: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * 10079;
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 23;
                 end
             end
             CMP_4: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * 315;
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 15;
                 end
             end
             CMP_5: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * 630;
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 15;
                 end
             end
             CMP_10: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * 5160669;
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 23;
                 end
             end
             CMP_11: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * 5160670;
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 22;
@@ -501,7 +495,7 @@ module pe_array #(
             end
 
             DCP3: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * (2 * Gamma2);
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i];
@@ -509,19 +503,22 @@ module pe_array #(
             end
 
             default: begin
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_mul_w[i] = mmul_in0[i] * (2 * Gamma2);
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i];
                 end
             end
         endcase
+
+        for (i = 0; i < NUM; i = i+1) mmul_out_w[i] = mmul_sft[i];
     end
 
 
     ////////////////////////////////////////// exe logic///////////////////////////////////
     always_comb begin
-        for (i = 0; i < NUM; i++) begin
+        integer i, j;
+        for (i = 0; i < NUM; i = i+1) begin
             madd_in0[i] = data_in[i][0];
             madd_in1[i] = data_in[i][1];
             msub_in0[i] = data_in[i][0];
@@ -531,7 +528,7 @@ module pe_array #(
 
             data_out[i][0] = 0;
             data_out[i][1] = 0;
-            for (j = 0; j < IN_NUM; j++) begin
+            for (j = 0; j < IN_NUM; j = j+1) begin
                 data_in_p1_w[i][j] = data_in[i][j];
                 data_in_p2_w[i][j] = data_in_p1_r[i][j];
                 data_in_p3_w[i][j] = data_in_p2_r[i][j];
@@ -539,7 +536,7 @@ module pe_array #(
                 data_in_p5_w[i][j] = data_in_p4_r[i][j];
                 data_in_p6_w[i][j] = data_in_p5_r[i][j];
             end
-            for (j = 0; j < OUT_NUM; j++) begin
+            for (j = 0; j < OUT_NUM; j = j+1) begin
                 data_out_p1_w[i][j] = 0;
                 data_out_p2_w[i][j] = data_out_p1_r[i][j];
                 data_out_p3_w[i][j] = data_out_p2_r[i][j];
@@ -553,20 +550,20 @@ module pe_array #(
 
         case (instr)
             MADD: begin
-                for (i = 0; i < NUM; i++) data_out[i][0] = madd_out_r[i];
+                for (i = 0; i < NUM; i = i+1) data_out[i][0] = madd_out_r[i];
             end
 
             MSUB: begin
-                for (i = 0; i < NUM; i++) data_out[i][0] = msub_out_r[i];
+                for (i = 0; i < NUM; i = i+1) data_out[i][0] = msub_out_r[i];
          
             end
 
             MMUL: begin
-                for (i = 0; i < NUM; i++) data_out[i][0] = mmul_out_r[i];
+                for (i = 0; i < NUM; i = i+1) data_out[i][0] = mmul_out_r[i];
             end
 
             KMUL: begin // 4 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_in0[i] = mmul_out_r[i];
                     msub_in1[i] = 0;
 
@@ -575,7 +572,7 @@ module pe_array #(
             end
 
             KMAC: begin // 6 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_in0[i] = mmul_out_r[i];
                     msub_in1[i] = 0;
                     madd_in0[i] = msub_out_r[i];
@@ -586,7 +583,7 @@ module pe_array #(
             end
 
             CT_BFO: begin // 5 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_in0[i] = data_in[i][1];
                     mmul_in1[i] = data_in[i][2];
                     madd_in0[i] = data_in_p4_r[i][0];
@@ -600,7 +597,7 @@ module pe_array #(
             end
 
             GS_BFO: begin // 5 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_in0[i] = data_in[i][0];
                     madd_in1[i] = data_in[i][1];
                     msub_in0[i] = data_in[i][0];
@@ -615,20 +612,20 @@ module pe_array #(
             end
 
             P2R: begin // 2 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_in0[i] = data_in[i][0];
                     madd_in1[i] = 0;
                     msub_in0[i] = data_in_p1_r[i][0];
                     msub_in1[i] = madd_out_r[i] << D;
 
-                    data_out_p1_w[i][0] = madd_out_r[i];
+                    data_out_p1_w[i][1] = madd_out_r[i];
                     data_out[i][0] = msub_out_r[i];
-                    data_out[i][1] = data_out_p1_r[i];
+                    data_out[i][1] = data_out_p1_r[i][1];
                 end            
             end
 
             DCP1: begin // 1 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_in0[i] = data_in[i][0];
                     madd_in1[i] = 0;
 
@@ -637,7 +634,7 @@ module pe_array #(
             end
 
             DCP2, CMP_1, CMP_4, CMP_5, CMP_10, CMP_11: begin // 4 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_in0[i] = data_in[i][0];
                     mmul_in1[i] = 0;
                     madd_in0[i] = mmul_out_r[i];
@@ -649,7 +646,7 @@ module pe_array #(
             end
 
             DCP3: begin // 4 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_in0[i] = data_in[i][1];
                     mmul_in1[i] = 0;
                     msub_in0[i] = data_in_p2_r[i][0];
@@ -664,7 +661,7 @@ module pe_array #(
             end
 
             MHINT: begin // 1 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     msub_in0[i] = data_in[i][0];
                     msub_in1[i] = 0;
                     madd_in0[i] = data_in[i][0];
@@ -675,7 +672,7 @@ module pe_array #(
             end
 
             UHINT: begin // 2 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_in0[i] = data_in[i][0];
                     madd_in1[i] = data_in[i][2];
                     msub_in0[i] = data_in_p1_r[i][1];
@@ -686,7 +683,7 @@ module pe_array #(
             end
 
             CHKZ, CHKW0, CHKH: begin // 1 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     madd_in0[i] = data_in[i][0];
                     madd_in1[i] = 0;
                     msub_in0[i] = data_in[i][0];
@@ -697,7 +694,7 @@ module pe_array #(
             end
 
             DCMP_1, DCMP_4, DCMP_5, DCMP_10, DCMP_11: begin // 3 stages
-                for (i = 0; i < NUM; i++) begin
+                for (i = 0; i < NUM; i = i+1) begin
                     mmul_in0[i] = data_in[i][0];
                     mmul_in1[i] = 0;
                     madd_in0[i] = mmul_out_r[i];
@@ -708,7 +705,7 @@ module pe_array #(
             end
 
             default: begin
-                for (i = 0; i < NUM; i++) data_out[i][0] = madd_out_r[i];
+                for (i = 0; i < NUM; i = i+1) data_out[i][0] = madd_out_r[i];
             end
         endcase
     end
@@ -716,12 +713,12 @@ module pe_array #(
     ///////////////////////////////////// sequential circuits /////////////////////////
     always_ff @(posedge clk) begin
         if (rst) begin
-            for (int i = 0; i < NUM; i++) begin
+            for (int i = 0; i < NUM; i = i+1) begin
                 madd_out_r[i] <= 0;
                 msub_out_r[i] <= 0;
                 mmul_out_r[i] <= 0;
                 mmul_mul_r[i] <= 0;
-                for (int j = 0; j < IN_NUM; j++) begin
+                for (int j = 0; j < IN_NUM; j = j+1) begin
                     data_in_p1_r[i][j] <= 0;
                     data_in_p2_r[i][j] <= 0;
                     data_in_p3_r[i][j] <= 0;
@@ -730,7 +727,7 @@ module pe_array #(
                     data_in_p6_r[i][j] <= 0;
                 end
 
-                for (int j = 0; j < OUT_NUM; j++) begin
+                for (int j = 0; j < OUT_NUM; j = j+1) begin
                     data_out_p1_r[i][j] <= 0;
                     data_out_p2_r[i][j] <= 0;
                     data_out_p3_r[i][j] <= 0;
@@ -741,12 +738,12 @@ module pe_array #(
 
             end
         end else begin
-            for (int i = 0; i < NUM; i++) begin
+            for (int i = 0; i < NUM; i = i+1) begin
                 madd_out_r[i] <= madd_out_w[i];
                 msub_out_r[i] <= msub_out_w[i];
                 mmul_out_r[i] <= mmul_out_w[i];
                 mmul_mul_r[i] <= mmul_mul_w[i];
-                for (int j = 0; j < IN_NUM; j++) begin
+                for (int j = 0; j < IN_NUM; j = j+1) begin
                     data_in_p1_r[i][j] <= data_in_p1_w[i][j];
                     data_in_p2_r[i][j] <= data_in_p2_w[i][j];
                     data_in_p3_r[i][j] <= data_in_p3_w[i][j];
@@ -755,7 +752,7 @@ module pe_array #(
                     data_in_p6_r[i][j] <= data_in_p6_w[i][j];
                 end
 
-                for (int j = 0; j < OUT_NUM; j++) begin
+                for (int j = 0; j < OUT_NUM; j = j+1) begin
                     data_out_p1_r[i][j] <= data_out_p1_w[i][j];
                     data_out_p2_r[i][j] <= data_out_p2_w[i][j];
                     data_out_p3_r[i][j] <= data_out_p3_w[i][j];
@@ -769,3 +766,115 @@ module pe_array #(
 
 endmodule
 
+
+ 
+
+module MR(
+    input clk,
+    input mode, // 0: Kyber, 1: Dilithium
+    input [45:0] d,
+
+    output [23:0] MR_output
+);  
+    wire [24:0] Q;
+
+    wire [24:0] D_CSA_input[0:4];
+    wire [24:0] D_CSA_sum[0:2], D_CSA_carry[0:2];
+
+    wire [14:0] K_CSA_input[0:7];
+    wire [24:0] K_CSA_sum[0:5], K_CSA_carry[0:5];
+
+    reg [24:0] CPA_input[0:1];
+    reg signed [24:0] CPA_output_w, CPA_output_r;
+
+    reg [24:0] MR_output_w, MR_output_r;
+
+    assign MR_output = (mode) ? MR_output_r[23:0] : {11'd0, MR_output_r[12:0]}; // Output the result
+    assign Q = (mode) ? 25'd8380417 : 25'd3329; // Q value for Kyber and Dilithium
+
+    // Dilithium CSA logic
+    assign D_CSA_input[0] = {2'd0, d[45:23]}; 
+    assign D_CSA_input[1] = {2'd0, ~d[22:0]};
+    assign D_CSA_input[2] = {2'd0, ~d[9:0], d[22:10]}; 
+    assign D_CSA_input[3] = {1'd1, 10'd0, 1'd1, d[9:0], 3'd1}; 
+    assign D_CSA_input[4] = 25'd8380417;
+    
+    assign D_CSA_sum[0] = D_CSA_input[0] ^ D_CSA_input[1] ^ D_CSA_input[2];
+    assign D_CSA_carry[0] = ((D_CSA_input[0] & D_CSA_input[1]) | (D_CSA_input[1] & D_CSA_input[2]) | (D_CSA_input[2] & D_CSA_input[0])) << 1;
+    assign D_CSA_sum[1] = D_CSA_sum[0] ^ D_CSA_carry[0] ^ D_CSA_input[3];
+    assign D_CSA_carry[1] = ((D_CSA_sum[0] & D_CSA_carry[0]) | (D_CSA_carry[0] & D_CSA_input[3]) | (D_CSA_input[3] & D_CSA_sum[0])) << 1;
+    assign D_CSA_sum[2] = D_CSA_sum[1] ^ D_CSA_carry[1] ^ D_CSA_input[4];
+    assign D_CSA_carry[2] = ((D_CSA_sum[1] & D_CSA_carry[1]) | (D_CSA_carry[1] & D_CSA_input[4]) | (D_CSA_input[4] & D_CSA_sum[1])) << 1;
+
+
+    // Kyber CSA logic
+    assign K_CSA_input[0] = {2'd0, d[24:12]};
+    assign K_CSA_input[1] = {3'd0, ~d[11:0]};
+    assign K_CSA_input[2] = {6'd0, d[11:4], 1'd0};
+    assign K_CSA_input[3] = {7'd0, d[11:4]};
+    assign K_CSA_input[4] = {3'd0, d[3:2], ~d[3:2], d[3:2], 4'd0, d[3:2]};
+    assign K_CSA_input[5] = {4'd0, ~d[1:0], ~d[1:0],1'd0, d[1:0], 4'd0};
+    assign K_CSA_input[6] = 15'b110_0101_1000_0001;
+    assign K_CSA_input[7] = (d[1:0] > d[3:2]) ? 15'd3329 : 15'd0; 
+
+    assign K_CSA_sum[0] = K_CSA_input[0] ^ K_CSA_input[1] ^ K_CSA_input[2];
+    assign K_CSA_carry[0] = ((K_CSA_input[0] & K_CSA_input[1]) | (K_CSA_input[1] & K_CSA_input[2]) | (K_CSA_input[2] & K_CSA_input[0])) << 1;
+    assign K_CSA_sum[1] = K_CSA_sum[0] ^ K_CSA_carry[0] ^ K_CSA_input[3];
+    assign K_CSA_carry[1] = ((K_CSA_sum[0] & K_CSA_carry[0]) | (K_CSA_carry[0] & K_CSA_input[3]) | (K_CSA_input[3] & K_CSA_sum[0])) << 1;
+    assign K_CSA_sum[2] = K_CSA_sum[1] ^ K_CSA_carry[1] ^ K_CSA_input[4];
+    assign K_CSA_carry[2] = ((K_CSA_sum[1] & K_CSA_carry[1]) | (K_CSA_carry[1] & K_CSA_input[4]) | (K_CSA_input[4] & K_CSA_sum[1])) << 1;
+    assign K_CSA_sum[3] = K_CSA_sum[2] ^ K_CSA_carry[2] ^ K_CSA_input[5];
+    assign K_CSA_carry[3] = ((K_CSA_sum[2] & K_CSA_carry[2]) | (K_CSA_carry[2] & K_CSA_input[5]) | (K_CSA_input[5] & K_CSA_sum[2])) << 1;
+    assign K_CSA_sum[4] = K_CSA_sum[3] ^ K_CSA_carry[3] ^ K_CSA_input[6];
+    assign K_CSA_carry[4] = ((K_CSA_sum[3] & K_CSA_carry[3]) | (K_CSA_carry[3] & K_CSA_input[6]) | (K_CSA_input[6] & K_CSA_sum[3])) << 1;
+    assign K_CSA_sum[5] = K_CSA_sum[4] ^ K_CSA_carry[4] ^ K_CSA_input[7];
+    assign K_CSA_carry[5] = ((K_CSA_sum[4] & K_CSA_carry[4]) | (K_CSA_carry[4] & K_CSA_input[7]) | (K_CSA_input[7] & K_CSA_sum[4])) << 1;
+
+
+    reg larger, smaller;
+
+    always @(*) begin
+        // First stage
+        CPA_input[0] = 25'd0; 
+        CPA_input[1] = 25'd0; 
+        if(mode) begin
+            // Dilithium mode
+            CPA_input[0] = D_CSA_sum[2]; 
+            CPA_input[1] = D_CSA_carry[2]; 
+        end else begin
+            // Kyber mode
+            CPA_input[0] = K_CSA_sum[5];
+            CPA_input[1] = K_CSA_carry[5];
+        end
+        CPA_output_w = CPA_input[0] + CPA_input[1]; // CPA output
+    
+        // Second stage
+        MR_output_w = 24'd0; // Initialize MR output
+        if(mode) begin
+
+            if ($signed(CPA_output_r) >= $signed(Q)) begin
+                MR_output_w = CPA_output_r - Q; // Subtract Q if the result is greater than or equal to Q
+            end else if($signed(CPA_output_r)  < 0)begin
+                MR_output_w = CPA_output_r + Q;
+            end else begin
+                MR_output_w = CPA_output_r; // Otherwise, keep the result as is
+            end
+        end else begin
+            if ($signed(CPA_output_r[14:0]) >= $signed(Q)) begin
+                MR_output_w = CPA_output_r - Q; // Subtract Q if the result is greater than or equal to Q
+            end else if($signed(CPA_output_r[14:0])  < 0)begin
+                MR_output_w = CPA_output_r + Q;
+            end else begin
+                MR_output_w = CPA_output_r; // Otherwise, keep the result as is
+            end
+        end
+
+    end
+
+
+    always @(posedge clk ) begin
+        CPA_output_r <= CPA_output_w; // Register the output
+        MR_output_r <= MR_output_w; // Register the output
+    end
+
+endmodule
