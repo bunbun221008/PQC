@@ -101,6 +101,68 @@ module pe_array #(
     logic [WIDTH-1:0] data_out_p5_w[0:NUM-1][0:OUT_NUM-1], data_out_p5_r[0:NUM-1][0:OUT_NUM-1];
     logic [WIDTH-1:0] data_out_p6_w[0:NUM-1][0:OUT_NUM-1], data_out_p6_r[0:NUM-1][0:OUT_NUM-1];
 
+    /////////////////////////////////////////// parameter assign ////////////////////////
+    always_comb begin
+        case (alg)
+            KEM_512: begin
+                Q = 3329;
+                D = 13;
+                Alpha = 16;
+                Beta = 120;
+                Gamma1 = 1<<19;
+                Gamma2 = 104;
+            end
+            KEM_768: begin
+                Q = 3329;
+                D = 13;
+                Alpha = 16;
+                Beta = 120;
+                Gamma1 = 1<<19;
+                Gamma2 = 104;
+            end
+            KEM_1024: begin
+                Q = 3329;
+                D = 13;
+                Alpha = 16;
+                Beta = 120;
+                Gamma1 = 1<<19;
+                Gamma2 = 104;
+            end
+            DSA_44: begin
+                Q = 8380417;
+                D = 13;
+                Alpha = 44;
+                Beta = 78;
+                Gamma1 = 1<<17;
+                Gamma2 = 95232;
+            end
+            DSA_65: begin
+                Q = 8380417;
+                D = 13;
+                Alpha = 16;
+                Beta = 196;
+                Gamma1 = 1<<19;
+                Gamma2 = 261888; 
+            end
+            DSA_87: begin
+                Q = 8380417;
+                D = 13;
+                Alpha = 16; 
+                Beta = 120; 
+                Gamma1 = 1<<19; 
+                Gamma2 = 261888; 
+            end
+            default: begin
+                Q = 8380417;
+                D = 13;
+                Alpha = 16; 
+                Beta = 120; 
+                Gamma1 = 1<<19; 
+                Gamma2 = 261888; 
+            end
+        endcase
+    end
+
     ////////////////////////////////////////// madd ///////////////////////////////////
     always_comb begin
         for (i = 0; i < NUM; i++) madd_out_w[i] = madd_sft[i];
