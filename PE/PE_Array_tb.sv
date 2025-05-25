@@ -89,23 +89,33 @@ module PE_Array_tb;
         
         
         #(`CYCLE*0.2)
-        instr = MMUL;
-        alg = DSA_44;
-        data_in[0][0] = 24'd100000;
-        data_in[0][1] = 24'd8191000;
-        data_in[0][2] = 24'd767;
-        data_in[1][0] = 24'd8191;
-        data_in[1][1] = 24'd767;
-        data_in[1][2] = 24'd32;
-        data_in[2][0] = 24'd32;
-        data_in[2][1] = 24'd32;
-        data_in[2][2] = 24'd32;
-        data_in[3][0] = 24'd32;
-        data_in[3][1] = 24'd32;
-        data_in[3][2] = 24'd32;
+        instr = DCP3;
+        alg = DSA_87;
+        data_in[0][0] = 24'd134;
+        data_in[0][1] = 24'd2;
+        data_in[0][2] = 24'd337;
+        data_in[1][0] = 24'd478;
+        data_in[1][1] = 24'd5;
+        data_in[1][2] = 24'd64;
+        data_in[2][0] = 24'd7;
+        data_in[2][1] = 24'd8;
+        data_in[2][2] = 24'd93;
+        data_in[3][0] = 24'd109;
+        data_in[3][1] = 24'd1;
+        data_in[3][2] = 24'd12;
         #(`CYCLE*0.8)
 
-        #(`CYCLE*3)
+        #(`CYCLE*0.2)
+        for( i=0; i<NUM; i=i+1 ) begin
+            for( j=0; j<IN_NUM; j=j+1 ) begin
+                data_in[i][j] = 0;
+            end
+        end
+        #(`CYCLE*0.8);
+
+    end
+    initial begin   
+        #(`CYCLE*4)
 
         #(`CYCLE*0.2)
         // display output

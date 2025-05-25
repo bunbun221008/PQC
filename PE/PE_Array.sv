@@ -562,7 +562,7 @@ module PE_Array #(
                 for (i = 0; i < NUM; i = i+1) data_out[i][0] = mmul_out_r[i];
             end
 
-            KMUL: begin // 4 stages
+            KMUL: begin // 5 stages
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_in0[i] = mmul_out_r[i];
                     msub_in1[i] = 0;
@@ -607,7 +607,7 @@ module PE_Array #(
 
                     data_out_p1_w[i][0] = madd_out_r[i];
                     data_out[i][0] = data_out_p4_r[i][0];
-                    data_out[i][1] = msub_out_r[i];
+                    data_out[i][1] = mmul_out_r[i];
                 end            
             end
 

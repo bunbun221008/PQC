@@ -293,4 +293,13 @@ class pe_array:
         return self.data_out
         
 
+if __name__ == "__main__":
+    # Test the PE array with a simple example
+    PA = pe_array(4)
+    PA.reset("DSA-87")
+    data = np.array([[134, 478, 7, 109], [2, 5, 8, 1], [337, 64, 93, 12]], dtype=np.uint32)
+    result = PA.exe("DCP3", data)
+    print("Result:", result)
+    
+    # Add more tests as needed to validate the functionality
     
