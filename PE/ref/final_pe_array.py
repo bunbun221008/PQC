@@ -348,8 +348,8 @@ class pe_array:
 if __name__ == "__main__":
     # Test the PE array with a simple example
     PA = pe_array(4)
-    PA.reset("KEM-512", "KMUL")
-    data = np.array([[134, 478, 7, 109], [25, 571, 8, 1666], [337, 64, 93, 12]], dtype=np.uint32)
+    PA.reset("KEM-1024", "KMAC")
+    data = np.array([[13400, 478, 7, 109], [25000, 571, 8, 1666], [337, 64, 93, 12]], dtype=np.uint32)
     result = PA.exe(data)
     print("Result:", result)
     

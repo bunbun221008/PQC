@@ -1,47 +1,47 @@
 
-// typedef enum logic [4:0] {
-//     MADD    = 5'd0,
-//     MSUB    = 5'd1,
-//     MMUL    = 5'd2,
-//     MMAC    = 5'd3,
-//     PREMUL  = 5'd4,
-//     KMUL    = 5'd5,
-//     KMAC    = 5'd6,
-//     NTT     = 5'd7,
-//     INTT    = 5'd8,
-//     P2R     = 5'd9,
-//     DCP1    = 5'd10,
-//     DCP2    = 5'd11,
-//     DCP3    = 5'd12,
-//     DCP4    = 5'd13,
-//     MHINT   = 5'd14,
-//     UHINT   = 5'd15,
-//     CHKZ    = 5'd16,
-//     CHKW0   = 5'd17,
-//     CHKH    = 5'd18,
-//     NEQL    = 5'd19,
-//     DCMP_1  = 5'd20,
-//     DCMP_4  = 5'd21,
-//     DCMP_5  = 5'd22,
-//     DCMP_10 = 5'd23,
-//     DCMP_11 = 5'd24,
-//     CMP_1   = 5'd25,
-//     CMP_4   = 5'd26,
-//     CMP_5   = 5'd27,
-//     CMP_10  = 5'd28,
-//     CMP_11  = 5'd29,
-//     SHFL    = 5'd30,
-//     BYPASS  = 5'd31
-// } pe_instr_t;
+typedef enum logic [4:0] {
+    MADD    = 5'd0,
+    MSUB    = 5'd1,
+    MMUL    = 5'd2,
+    MMAC    = 5'd3,
+    PREMUL  = 5'd4,
+    KMUL    = 5'd5,
+    KMAC    = 5'd6,
+    NTT     = 5'd7,
+    INTT    = 5'd8,
+    P2R     = 5'd9,
+    DCP1    = 5'd10,
+    DCP2    = 5'd11,
+    DCP3    = 5'd12,
+    DCP4    = 5'd13,
+    MHINT   = 5'd14,
+    UHINT   = 5'd15,
+    CHKZ    = 5'd16,
+    CHKW0   = 5'd17,
+    CHKH    = 5'd18,
+    NEQL    = 5'd19,
+    DCMP_1  = 5'd20,
+    DCMP_4  = 5'd21,
+    DCMP_5  = 5'd22,
+    DCMP_10 = 5'd23,
+    DCMP_11 = 5'd24,
+    CMP_1   = 5'd25,
+    CMP_4   = 5'd26,
+    CMP_5   = 5'd27,
+    CMP_10  = 5'd28,
+    CMP_11  = 5'd29,
+    SHFL    = 5'd30,
+    BYPASS  = 5'd31
+} pe_instr_t;
 
-// typedef enum logic [4:0] {
-//     KEM_512 = 5'd0,
-//     KEM_768 = 5'd1,
-//     KEM_1024 = 5'd2,
-//     DSA_44 = 5'd3,
-//     DSA_65 = 5'd4,
-//     DSA_87 = 5'd5
-// } pe_alg_t;
+typedef enum logic [4:0] {
+    KEM_512 = 5'd0,
+    KEM_768 = 5'd1,
+    KEM_1024 = 5'd2,
+    DSA_44 = 5'd3,
+    DSA_65 = 5'd4,
+    DSA_87 = 5'd5
+} pe_alg_t;
 
 
 module pe_array #(
@@ -72,21 +72,31 @@ module pe_array #(
     logic [WIDTH-1:0] madd_cmp[0:NUM-1], madd_sft[0:NUM-1], madd_add[0:NUM-1], madd_sub[0:NUM-1];
     logic [WIDTH-1:0] madd_out_w[0:NUM-1], madd_out_r[0:NUM-1];
 
+    logic [WIDTH-1:0] madd_add_in0[0:NUM-1], madd_add_in1[0:NUM-1], madd_add_out[0:NUM-1];
+    logic [WIDTH-1:0] madd_cmp_in0[0:NUM-1], madd_cmp_in1[0:NUM-1], madd_cmp_out[0:NUM-1];
+    logic [WIDTH-1:0] madd_sub_in0[0:NUM-1], madd_sub_in1[0:NUM-1], madd_sub_out[0:NUM-1];
+    logic [WIDTH-1:0] madd_sft_in0[0:NUM-1], madd_sft_in1[0:NUM-1], madd_sft_out[0:NUM-1];
 
     ////////////////////////////////// msub declare ////////////////////////////////////
     logic [WIDTH-1:0] msub_in0[0:NUM-1], msub_in1[0:NUM-1];
     logic [WIDTH-1:0] msub_cmp[0:NUM-1], msub_add[0:NUM-1], msub_sub[0:NUM-1];
     logic [WIDTH-1:0] msub_out_w[0:NUM-1], msub_out_r[0:NUM-1];
 
+    logic [WIDTH-1:0] msub_add_in0[0:NUM-1], msub_add_in1[0:NUM-1], msub_add_out[0:NUM-1];
+    logic [WIDTH-1:0] msub_cmp_in0[0:NUM-1], msub_cmp_in1[0:NUM-1], msub_cmp_out[0:NUM-1];
+    logic [WIDTH-1:0] msub_sub_in0[0:NUM-1], msub_sub_in1[0:NUM-1], msub_sub_out[0:NUM-1];
 
     /////////////////////////////////// mmul declare ///////////////////////////////////
     logic [WIDTH-1:0] mmul_in0[0:NUM-1], mmul_in1[0:NUM-1];
-    logic [2*WIDTH-1:0] mmul_mul_w[0:NUM-1], mmul_mul_r[0:NUM-1], 
-                        mmul_mul2_w[0:NUM-1],  mmul_mul2_r[0:NUM-1]; 
+    logic [2*WIDTH-1:0] mmul_mul_w[0:NUM-1], mmul_mul_r[0:NUM-1];
     logic [2*WIDTH-1:0] mmul_add_w[0:NUM-1], mmul_add_r[0:NUM-1];
     logic [2*WIDTH-1:0] mmul_red[0:NUM-1], mmul_red_in[0:NUM-1], mmul_sft[0:NUM-1];
     logic [WIDTH-1:0] MR_output[0:NUM-1];
     logic [WIDTH-1:0] mmul_out_w[0:NUM-1], mmul_out_r[0:NUM-1];
+
+    logic [WIDTH-1:0] mmul_mul_in0[0:NUM-1], mmul_mul_in1[0:NUM-1];
+    logic [2*WIDTH-1:0] mmul_mul_out[0:NUM-1];
+    logic mmul_dplx_mode;
 
     ////////////////////////////// data_in, data_out pipeline declare //////////////////////////////////
     logic [WIDTH-1:0] data_in_p1_w[0:NUM-1][0:IN_NUM-1], data_in_p1_r[0:NUM-1][0:IN_NUM-1];
@@ -166,50 +176,125 @@ module pe_array #(
     end
 
     ////////////////////////////////////////// madd ///////////////////////////////////
+    genvar gi;
+    generate
+        for (gi = 0; gi < NUM; gi = gi + 1) begin : MADD_ARRAY
+            assign madd_add_out[gi] = madd_add_in0[gi] + madd_add_in1[gi];
+            assign madd_cmp_out[gi] = madd_cmp_in0[gi] >= madd_cmp_in1[gi];
+            assign madd_sub_out[gi] = madd_sub_in0[gi] - madd_sub_in1[gi];
+            assign madd_sft_out[gi] = madd_sft_in0[gi] >> madd_sft_in1[gi];
+        end
+    endgenerate
+
     always_comb begin // madd
         integer i, j;
+        //default values
+        for (i = 0; i < NUM; i = i+1) begin
+            // madd_add[i] = madd_in0[i] + madd_in1[i];
+            madd_add_in0[i] = madd_in0[i];
+            madd_add_in1[i] = madd_in1[i];
+            madd_add[i] = madd_add_out[i];
+            // madd_cmp[i] = (madd_add[i] >= Q)? Q : 0;
+            madd_cmp_in0[i] = madd_add[i];
+            madd_cmp_in1[i] = Q;
+            madd_cmp[i] = (madd_cmp_out[i])? Q : 0;
+            // madd_sub[i] = madd_add[i] - madd_cmp[i];
+            madd_sub_in0[i] = madd_add[i];
+            madd_sub_in1[i] = madd_cmp[i];
+            madd_sub[i] = madd_sub_out[i];
+
+            // madd_sft[i] = madd_sub[i];
+            madd_sft_in0[i] = madd_sub[i];
+            madd_sft_in1[i] = 0;
+            madd_sft[i] = madd_sft_out[i];
+        end
+
         case (instr)
             MADD, MMAC, KMAC, NTT, INTT: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    madd_add[i] = madd_in0[i] + madd_in1[i];
-                    madd_cmp[i] = (madd_add[i] >= Q)? Q : 0;
-                    madd_sub[i] = madd_add[i] - madd_cmp[i];
-                    madd_sft[i] = madd_sub[i];
+                    // madd_add[i] = madd_in0[i] + madd_in1[i];
+                    madd_add_in0[i] = madd_in0[i];
+                    madd_add_in1[i] = madd_in1[i];
+                    madd_add[i] = madd_add_out[i];
+                    // madd_cmp[i] = (madd_add[i] >= Q)? Q : 0;
+                    madd_cmp_in0[i] = madd_add[i];
+                    madd_cmp_in1[i] = Q;
+                    madd_cmp[i] = (madd_cmp_out[i])? Q : 0;
+                    // madd_sub[i] = madd_add[i] - madd_cmp[i];
+                    madd_sub_in0[i] = madd_add[i];
+                    madd_sub_in1[i] = madd_cmp[i];
+                    madd_sub[i] = madd_sub_out[i];
+                    // madd_sft[i] = madd_sub[i];
+                    madd_sft_in0[i] = madd_sub[i];
+                    madd_sft_in1[i] = 0;
+                    madd_sft[i] = madd_sft_out[i];
                 end
             end
                 
             P2R: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    madd_add[i] = madd_in0[i] + ((1<<(D-1)) - 1);
+                    // madd_add[i] = madd_in0[i] + ((1<<(D-1)) - 1);
+                    madd_add_in0[i] = madd_in0[i];
+                    madd_add_in1[i] = (1 << (D - 1)) - 1;
+                    madd_add[i] = madd_add_out[i];
                     madd_cmp[i] = 0;
-                    madd_sub[i] = madd_add[i] - madd_cmp[i];
-                    madd_sft[i] = madd_sub[i] >> D;
+                    // madd_sub[i] = madd_add[i] - madd_cmp[i];
+                    madd_sub_in0[i] = madd_add[i];
+                    madd_sub_in1[i] = madd_cmp[i];
+                    madd_sub[i] = madd_sub_out[i];
+                    // madd_sft[i] = madd_sub[i] >> D;
+                    madd_sft_in0[i] = madd_sub[i];
+                    madd_sft_in1[i] = D;
+                    madd_sft[i] = madd_sft_out[i];
                 end
             end
                 
             DCP1: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    madd_add[i] = madd_in0[i] + 127;
+                    // madd_add[i] = madd_in0[i] + 127;
+                    madd_add_in0[i] = madd_in0[i];
+                    madd_add_in1[i] = 127;
+                    madd_add[i] = madd_add_out[i];
                     madd_cmp[i] = 0;
-                    madd_sub[i] = madd_add[i] - madd_cmp[i];
-                    madd_sft[i] = madd_sub[i] >> 7;
+                    // madd_sub[i] = madd_add[i] - madd_cmp[i];
+                    madd_sub_in0[i] = madd_add[i];
+                    madd_sub_in1[i] = madd_cmp[i];
+                    madd_sub[i] = madd_sub_out[i];
+                    // madd_sft[i] = madd_sub[i] >> 7;
+                    madd_sft_in0[i] = madd_sub[i];
+                    madd_sft_in1[i] = 7;
+                    madd_sft[i] = madd_sft_out[i];
                 end
             end
                 
             DCP2, DCMP_1, DCMP_4, DCMP_5, DCMP_10, DCMP_11, CMP_1, CMP_4, CMP_5, CMP_10, CMP_11: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    madd_add[i] = madd_in0[i] + 1;
+                    // madd_add[i] = madd_in0[i] + 1;
+                    madd_add_in0[i] = madd_in0[i];
+                    madd_add_in1[i] = 1;
+                    madd_add[i] = madd_add_out[i];
                     madd_cmp[i] = 0;
-                    madd_sub[i] = madd_add[i] - madd_cmp[i];
-                    madd_sft[i] = madd_sub[i] >> 1;
+                    // madd_sub[i] = madd_add[i] - madd_cmp[i];
+                    madd_sub_in0[i] = madd_add[i];
+                    madd_sub_in1[i] = madd_cmp[i];
+                    madd_sub[i] = madd_sub_out[i];
+                    // madd_sft[i] = madd_sub[i] >> 1;
+                    madd_sft_in0[i] = madd_sub[i];
+                    madd_sft_in1[i] = 1;
+                    madd_sft[i] = madd_sft_out[i];
                 end
             end
                
             DCP4: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
-                    madd_cmp[i] = (((Q-1)>>1) >= madd_add[i])? 1:0;
+                    // madd_cmp[i] = (((Q-1)>>1) >= madd_add[i])? 1:0;
+                    madd_cmp_in0[i] = (Q - 1) >> 1;
+                    madd_cmp_in1[i] = madd_add[i];
+                    madd_cmp[i] = (madd_cmp_out[i])? 1 : 0;
+
                     madd_sub[i] = madd_cmp[i] & (madd_add[i] != 0);
+
                     madd_sft[i] = madd_sub[i];
                 end
             end
@@ -226,7 +311,11 @@ module pe_array #(
             MHINT: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
-                    madd_cmp[i] = ((Q - 1 - Gamma2) >= madd_add[i])? 1:0;
+                    // madd_cmp[i] = ((Q - 1 - Gamma2) >= madd_add[i])? 1:0;
+                    madd_cmp_in0[i] = Q - 1 - Gamma2;
+                    madd_cmp_in1[i] = madd_add[i];
+                    madd_cmp[i] = (madd_cmp_out[i])? 1 : 0;
+                
                     madd_sub[i] = madd_cmp[i] | ((madd_in1[i] != 0)<<1);
                     madd_sft[i] = madd_sub[i];
                 end
@@ -235,7 +324,11 @@ module pe_array #(
             UHINT: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
-                    madd_cmp[i] = (madd_add[i] >= 1)? (Alpha - 1):0;
+                    // madd_cmp[i] = (madd_add[i] >= 1)? (Alpha - 1):0;
+                    madd_cmp_in0[i] = madd_add[i];
+                    madd_cmp_in1[i] = 1;
+                    madd_cmp[i] = (madd_cmp_out[i])? (Alpha - 1) : 0;
+
                     madd_sub[i] = madd_cmp[i];
                     madd_sft[i] = (madd_in1[i][0])? madd_sub[i]:0;
                 end
@@ -244,7 +337,10 @@ module pe_array #(
             CHKZ: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
-                    madd_cmp[i] = (madd_add[i] >= (Gamma1 - Beta))? 1:0;
+                    // madd_cmp[i] = (madd_add[i] >= (Gamma1 - Beta))? 1:0;
+                    madd_cmp_in0[i] = madd_add[i];
+                    madd_cmp_in1[i] = Gamma1 - Beta;
+                    madd_cmp[i] = (madd_cmp_out[i])? 1 : 0;
                     madd_sub[i] = madd_cmp[i];
                     madd_sft[i] = madd_sub[i];
                 end
@@ -253,7 +349,10 @@ module pe_array #(
             CHKW0: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
-                    madd_cmp[i] = (madd_add[i] >= (Gamma2 - Beta))? 1:0;
+                    // madd_cmp[i] = (madd_add[i] >= (Gamma2 - Beta))? 1:0;
+                    madd_cmp_in0[i] = madd_add[i];
+                    madd_cmp_in1[i] = Gamma2 - Beta;
+                    madd_cmp[i] = (madd_cmp_out[i])? 1 : 0;
                     madd_sub[i] = madd_cmp[i];
                     madd_sft[i] = madd_sub[i];
                 end
@@ -262,7 +361,11 @@ module pe_array #(
             CHKH: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
-                    madd_cmp[i] = (madd_add[i] >= (Gamma2))? 1:0;
+                    // madd_cmp[i] = (madd_add[i] >= (Gamma2))? 1:0;
+                    madd_cmp_in0[i] = madd_add[i];
+                    madd_cmp_in1[i] = Gamma2;
+                    madd_cmp[i] = (madd_cmp_out[i])? 1 : 0;
+
                     madd_sub[i] = madd_cmp[i];
                     madd_sft[i] = madd_sub[i];
                 end
@@ -271,7 +374,10 @@ module pe_array #(
             default: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
-                    madd_cmp[i] = (madd_add[i] >= (Gamma2))? 1:0;
+                    // madd_cmp[i] = (madd_add[i] >= (Gamma2))? 1:0;
+                    madd_cmp_in0[i] = madd_add[i];
+                    madd_cmp_in1[i] = Gamma2;
+                    madd_cmp[i] = (madd_cmp_out[i])? 1 : 0;
                     madd_sub[i] = madd_cmp[i];
                     madd_sft[i] = madd_sub[i];
                 end
@@ -282,22 +388,63 @@ module pe_array #(
     end
 
     ////////////////////////////////////////// msub ///////////////////////////////////
+    generate
+        for (gi = 0; gi < NUM; gi = gi + 1) begin : MSUB_ARRAY
+            assign msub_sub_out[gi] = msub_sub_in0[gi] - msub_sub_in1[gi];
+            assign msub_cmp_out[gi] = msub_cmp_in0[gi] >= msub_cmp_in1[gi];
+            assign msub_add_out[gi] = msub_add_in0[gi] + msub_add_in1[gi];
+        end
+    endgenerate
+
     always_comb begin //msub
         integer i, j;
+        for (i = 0; i < NUM; i = i+1) begin
+            // msub_sub[i] = msub_in0[i] - msub_in1[i];
+            msub_sub_in0[i] = msub_in0[i];
+            msub_sub_in1[i] = msub_in1[i];
+            msub_sub[i] = msub_sub_out[i];
+
+            // msub_cmp[i] = (msub_sub[i] >= (Gamma2 + 1))? 1 : 0;
+            msub_cmp_in0[i] = msub_sub[i];
+            msub_cmp_in1[i] = Gamma2 + 1;
+            msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
+
+            // msub_add[i] = msub_sub[i] + msub_cmp[i];
+            msub_add_in0[i] = msub_sub[i];
+            msub_add_in1[i] = msub_cmp[i];
+            msub_add[i] = msub_add_out[i];
+        end
+
         case (instr)
             MSUB, NTT, INTT, DCP3, DCP4: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    msub_sub[i] = msub_in0[i] - msub_in1[i];
+                    // msub_sub[i] = msub_in0[i] - msub_in1[i];
+                    msub_sub_in0[i] = msub_in0[i];
+                    msub_sub_in1[i] = msub_in1[i];
+                    msub_sub[i] = msub_sub_out[i];
+
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Q : 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
                 end
             end
 
             P2R: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    msub_sub[i] = msub_in0[i] - (msub_in1[i] << D);
+                    // msub_sub[i] = msub_in0[i] - (msub_in1[i] << D);
+                    msub_sub_in0[i] = msub_in0[i];
+                    msub_sub_in1[i] = (msub_in1[i] << D);
+                    msub_sub[i] = msub_sub_out[i];
+
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Q : 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
                 end
             end
 
@@ -305,94 +452,176 @@ module pe_array #(
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = (msub_in1[i] << D);
                     msub_cmp[i] = 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
                 end
             end
 
             NEQL: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    msub_sub[i] = msub_in0[i] - msub_in1[i];
+                    // msub_sub[i] = msub_in0[i] - msub_in1[i];
+                    msub_sub_in0[i] = msub_in0[i];
+                    msub_sub_in1[i] = msub_in1[i];
+                    msub_sub[i] = msub_sub_out[i];
+
                     msub_cmp[i] = 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
+
                 end
             end
                 
             KMUL, KMAC: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    msub_sub[i] = msub_in0[i] - Q;
+                    // msub_sub[i] = msub_in0[i] - Q;
+                    msub_sub_in0[i] = msub_in0[i];
+                    msub_sub_in1[i] = Q;
+                    msub_sub[i] = msub_sub_out[i];
+
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Q : 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
+
                 end
             end
 
             DCP2: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    msub_sub[i] = msub_in0[i] - Alpha;
+                    // msub_sub[i] = msub_in0[i] - Alpha;
+                    msub_sub_in0[i] = msub_in0[i];
+                    msub_sub_in1[i] = Alpha;
+                    msub_sub[i] = msub_sub_out[i];
+
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Alpha : 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
                 end
             end
 
             CMP_1: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    msub_sub[i] = msub_in0[i] - (1<<1);
+                    // msub_sub[i] = msub_in0[i] - (1<<1);
+                    msub_sub_in0[i] = msub_in0[i];
+                    msub_sub_in1[i] = (1<<1);
+                    msub_sub[i] = msub_sub_out[i];
+
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<1) : 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
+
                 end
             end
 
             CMP_4: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    msub_sub[i] = msub_in0[i] - (1<<4);
+                    // msub_sub[i] = msub_in0[i] - (1<<4);
+                    msub_sub_in0[i] = msub_in0[i];
+                    msub_sub_in1[i] = (1<<4);
+                    msub_sub[i] = msub_sub_out[i];
+
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<4) : 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
+
                 end
             end
 
             CMP_5: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    msub_sub[i] = msub_in0[i] - (1<<5);
+                    // msub_sub[i] = msub_in0[i] - (1<<5);
+                    msub_sub_in0[i] = msub_in0[i];
+                    msub_sub_in1[i] = (1<<5);
+                    msub_sub[i] = msub_sub_out[i];
+
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<5) : 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
+
                 end
             end
 
             CMP_10: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    msub_sub[i] = msub_in0[i] - (1<<10);
+                    // msub_sub[i] = msub_in0[i] - (1<<10);
+                    msub_sub_in0[i] = msub_in0[i];
+                    msub_sub_in1[i] = (1<<10);
+                    msub_sub[i] = msub_sub_out[i];
+
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<10) : 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
                 end
             end
 
             CMP_11: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    msub_sub[i] = msub_in0[i] - (1<<11);
+                    // msub_sub[i] = msub_in0[i] - (1<<11);
+                    msub_sub_in0[i] = msub_in0[i];
+                    msub_sub_in1[i] = (1<<11);
+                    msub_sub[i] = msub_sub_out[i];
+
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? (1<<11) : 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
+
                 end
             end
                
             MHINT: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
-                    msub_cmp[i] = (msub_sub[i] >= (Gamma2 + 1))? 1 : 0;
+                    // msub_cmp[i] = (msub_sub[i] >= (Gamma2 + 1))? 1 : 0;
+                    msub_cmp_in0[i] = msub_sub[i];
+                    msub_cmp_in1[i] = Gamma2 + 1;
+                    msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
+
                     msub_add[i] = msub_cmp[i] | ((msub_sub[i] == (Q-Gamma2))<<1);
                 end
             end
                 
             UHINT: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    msub_sub[i] = msub_in0[i] - msub_in1[i];
+                    // msub_sub[i] = msub_in0[i] - msub_in1[i];
+                    msub_sub_in0[i] = msub_in0[i];
+                    msub_sub_in1[i] = msub_in1[i];
+                    msub_sub[i] = msub_sub_out[i];
+
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Alpha : 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
+
                 end
             end
                 
             CHKZ: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
-                    msub_cmp[i] = ((Q - (Gamma1 - Beta)) >= msub_sub[i])? 1 : 0;
+                    // msub_cmp[i] = ((Q - (Gamma1 - Beta)) >= msub_sub[i])? 1 : 0;
+                    msub_cmp_in0[i] = Q - (Gamma1 - Beta);
+                    msub_cmp_in1[i] = msub_sub[i];
+                    msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
+
                     msub_add[i] = msub_cmp[i];
                 end
             end
@@ -400,7 +629,11 @@ module pe_array #(
             CHKW0: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
-                    msub_cmp[i] = ((Q - (Gamma2 - Beta)) >= msub_sub[i])? 1 : 0;
+                    // msub_cmp[i] = ((Q - (Gamma2 - Beta)) >= msub_sub[i])? 1 : 0;
+                    msub_cmp_in0[i] = Q - (Gamma2 - Beta);
+                    msub_cmp_in1[i] = msub_sub[i];
+                    msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
+
                     msub_add[i] = msub_cmp[i];
                 end
             end
@@ -408,7 +641,11 @@ module pe_array #(
             CHKH: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
-                    msub_cmp[i] = ((Q - Gamma2) >= msub_sub[i])? 1 : 0;
+                    // msub_cmp[i] = ((Q - Gamma2) >= msub_sub[i])? 1 : 0;
+                    msub_cmp_in0[i] = Q - Gamma2;
+                    msub_cmp_in1[i] = msub_sub[i];
+                    msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
+
                     msub_add[i] = msub_cmp[i];
                 end
             end
@@ -420,14 +657,22 @@ module pe_array #(
                 msub_sub[3] = Q - msub_in0[3];
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Q : 0;
-                    msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    // msub_add[i] = msub_sub[i] + msub_cmp[i];
+                    msub_add_in0[i] = msub_sub[i];
+                    msub_add_in1[i] = msub_cmp[i];
+                    msub_add[i] = msub_add_out[i];
+
                 end
             end
 
             default: begin
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
-                    msub_cmp[i] = ((Q - Gamma2) >= msub_sub[i])? 1 : 0;
+                    // msub_cmp[i] = ((Q - Gamma2) >= msub_sub[i])? 1 : 0;
+                    msub_cmp_in0[i] = Q - Gamma2;
+                    msub_cmp_in1[i] = msub_sub[i];
+                    msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
+
                     msub_add[i] = msub_cmp[i];
                 end
             end
@@ -437,9 +682,8 @@ module pe_array #(
     end
 
     ////////////////////////////////////////// mmul ///////////////////////////////////
-    genvar gi;
     generate
-        for (gi = 0; gi < NUM; gi = gi + 1) begin : PE_ARRAY
+        for (gi = 0; gi < NUM; gi = gi + 1) begin : mr_array
             MR mr (
                 .clk(clk),
                 .mode((alg == DSA_44 || alg == DSA_65 || alg == DSA_87)? 1'b1:1'b0),
@@ -448,14 +692,32 @@ module pe_array #(
             );
         end
     endgenerate
+
+    generate
+        for (gi = 0; gi < NUM; gi = gi + 1) begin : mult_dx_array
+            DW_mult_dx #(WIDTH, WIDTH/2)
+            U1 (
+                .a(mmul_mul_in0[gi]),
+                .b(mmul_mul_in1[gi]),
+                .tc(0),
+                .dplx(mmul_dplx_mode),
+                .product(mmul_mul_out[gi])
+            );
+        end
+    endgenerate
     
     always_comb begin // mmul
         integer i, j;
 
         for (i = 0; i < NUM; i = i+1) begin
-            mmul_mul_w[i] = mmul_in0[i][WIDTH-1:12] * mmul_in1[i][WIDTH-1:12]; 
-            mmul_mul2_w[i] = mmul_in0[i][11:0] * mmul_in1[i][11:0];
-            mmul_add_w[i] = mmul_mul_r[i] + mmul_mul2_r[i];
+            // mmul_mul_w[i] = mmul_in0[i][WIDTH-1:12] * mmul_in1[i][WIDTH-1:12]; 
+            // mmul_mul2_w[i] = mmul_in0[i][11:0] * mmul_in1[i][11:0];
+            mmul_dplx_mode = 1;
+            mmul_mul_in0[i] = mmul_in0[i];
+            mmul_mul_in1[i] = mmul_in1[i];
+            mmul_mul_w[i] = mmul_mul_out[i];
+            mmul_add_w[i] = mmul_mul_r[i][2*WIDTH-1 : WIDTH] + mmul_mul_r[i][WIDTH-1 : 0];
+
             mmul_red_in[i] = mmul_add_r[i];
             mmul_red[i] = MR_output[i];
             mmul_sft[i] = mmul_red[i];
@@ -464,7 +726,12 @@ module pe_array #(
         case (instr)
             MMUL, MMAC, NTT, INTT, PREMUL: begin // 4 stages
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * mmul_in1[i];
+                    // mmul_mul_w[i] = mmul_in0[i] * mmul_in1[i];
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = mmul_in1[i];
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red_in[i] = mmul_mul_r[i];
                     mmul_red[i] = MR_output[i];
                     mmul_sft[i] = mmul_red[i];
@@ -473,9 +740,14 @@ module pe_array #(
 
             KMUL, KMAC: begin // 5 stages
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i][WIDTH-1:12] * mmul_in1[i][WIDTH-1:12]; 
-                    mmul_mul2_w[i] = mmul_in0[i][11:0] * mmul_in1[i][11:0];
-                    mmul_add_w[i] = mmul_mul_r[i] + mmul_mul2_r[i];
+                    // mmul_mul_w[i] = mmul_in0[i][WIDTH-1:12] * mmul_in1[i][WIDTH-1:12]; 
+                    // mmul_mul2_w[i] = mmul_in0[i][11:0] * mmul_in1[i][11:0];
+                    mmul_dplx_mode = 1;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = mmul_in1[i];
+                    mmul_mul_w[i] = mmul_mul_out[i];
+                    mmul_add_w[i] = mmul_mul_r[i][2*WIDTH-1 : WIDTH] + mmul_mul_r[i][WIDTH-1 : 0];
+
                     mmul_red_in[i] = mmul_add_r[i];
                     mmul_red[i] = MR_output[i];
                     mmul_sft[i] = mmul_red[i];
@@ -484,77 +756,132 @@ module pe_array #(
 
             DCP2: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * ((Alpha == 16)?  1025 : 11275);
+                    // mmul_mul_w[i] = mmul_in0[i] * ((Alpha == 16)?  1025 : 11275);
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = (Alpha == 16)? 1025 : 11275;
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> ((Alpha == 16)?  21 : 23);
                 end
             end
             DCMP_1: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * Q;
+                    // mmul_mul_w[i] = mmul_in0[i] * Q;
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = Q;
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i];
                 end
             end
             DCMP_4: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * Q;
+                    // mmul_mul_w[i] = mmul_in0[i] * Q;
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = Q;
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 3;
                 end
             end
             DCMP_5: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * Q;
+                    // mmul_mul_w[i] = mmul_in0[i] * Q;
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = Q;
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 4;
                 end
             end
             DCMP_10: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * Q;
+                    // mmul_mul_w[i] = mmul_in0[i] * Q;
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = Q;
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 9;
                 end
             end
             DCMP_11: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * Q;
+                    // mmul_mul_w[i] = mmul_in0[i] * Q;
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = Q;
+                    mmul_mul_w[i] = mmul_mul_out[i];
+                    
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 10;
                 end
             end
             CMP_1: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * 10079;
+                    // mmul_mul_w[i] = mmul_in0[i] * 10079;
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = 10079;
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 23;
                 end
             end
             CMP_4: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * 315;
+                    // mmul_mul_w[i] = mmul_in0[i] * 315;
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = 315;
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 15;
                 end
             end
             CMP_5: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * 630;
+                    // mmul_mul_w[i] = mmul_in0[i] * 630;
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = 630;
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 15;
                 end
             end
             CMP_10: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * 5160669;
+                    // mmul_mul_w[i] = mmul_in0[i] * 5160669;
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = 5160669;
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 23;
                 end
             end
             CMP_11: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * 5160670;
+                    // mmul_mul_w[i] = mmul_in0[i] * 5160670;
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = 5160670;
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i] >> 22;
                 end
@@ -562,7 +889,12 @@ module pe_array #(
 
             DCP3, DCP4: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * (2 * Gamma2);
+                    // mmul_mul_w[i] = mmul_in0[i] * (2 * Gamma2);
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = (2 * Gamma2);
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i];
                 end
@@ -570,7 +902,12 @@ module pe_array #(
 
             default: begin
                 for (i = 0; i < NUM; i = i+1) begin
-                    mmul_mul_w[i] = mmul_in0[i] * (2 * Gamma2);
+                    // mmul_mul_w[i] = mmul_in0[i] * (2 * Gamma2);
+                    mmul_dplx_mode = 0;
+                    mmul_mul_in0[i] = mmul_in0[i];
+                    mmul_mul_in1[i] = (2 * Gamma2);
+                    mmul_mul_w[i] = mmul_mul_out[i];
+
                     mmul_red[i] = mmul_mul_r[i];
                     mmul_sft[i] = mmul_red[i];
                 end
@@ -832,7 +1169,6 @@ module pe_array #(
                 msub_out_r[i] <= 0;
                 mmul_out_r[i] <= 0;
                 mmul_mul_r[i] <= 0;
-                mmul_mul2_r[i] <= 0;
                 mmul_add_r[i] <= 0;
                 for (int j = 0; j < IN_NUM; j = j+1) begin
                     data_in_p1_r[i][j] <= 0;
@@ -859,7 +1195,6 @@ module pe_array #(
                 msub_out_r[i] <= msub_out_w[i];
                 mmul_out_r[i] <= mmul_out_w[i];
                 mmul_mul_r[i] <= mmul_mul_w[i];
-                mmul_mul2_r[i] <= mmul_mul2_w[i];
                 mmul_add_r[i] <= mmul_add_w[i];
                 for (int j = 0; j < IN_NUM; j = j+1) begin
                     data_in_p1_r[i][j] <= data_in_p1_w[i][j];
@@ -996,3 +1331,158 @@ module MR(
     end
 
 endmodule
+
+
+module DW_mult_dx (a, b, tc, dplx, product );
+
+   parameter integer width = 16;
+   parameter integer p1_width = 8;
+
+   `define DW_p2_width (width-p1_width)
+
+   input [width-1 : 0] a;
+   input [width-1 : 0] b;
+   input 	       tc;
+   input 	       dplx;
+   output [2*width-1 : 0] product;
+
+   wire [width-1 : 0] 	  a;
+   wire [width-1 : 0] 	  b;
+   wire 		  tc;
+   wire 		  dplx;
+   wire [2*width-1 : 0]   product;
+   wire [2*width-1 : 0]   duplex_prod;
+   wire [2*width-1 : 0]   simplex_prod;
+
+// synopsys translate_off
+  
+ 
+  initial begin : parameter_check
+    integer param_err_flg;
+
+    param_err_flg = 0;
+    
+    
+    if (width < 4) begin
+      param_err_flg = 1;
+      $display(
+	"ERROR: %m :\n  Invalid value (%d) for parameter width (lower bound: 4)",
+	width );
+    end
+    
+    if ( (p1_width < 2) || (p1_width > width-2) ) begin
+      param_err_flg = 1;
+      $display(
+	"ERROR: %m :\n  Invalid value (%d) for parameter p1_width (legal range: 2 to width-2)",
+	p1_width );
+    end
+  
+    if ( param_err_flg == 1) begin
+      $display(
+        "%m :\n  Simulation aborted due to invalid parameter value(s)");
+      $finish;
+    end
+
+  end // parameter_check 
+
+     
+     DW02_mult 	#(width, width)
+	U1 (
+	    .A(a),
+	    .B(b),
+	    .TC(tc),
+	    .PRODUCT(simplex_prod)
+	    );
+
+   DW02_mult #(p1_width, p1_width)
+      U2_1 (
+	    .A(a[p1_width-1 : 0]),
+	    .B(b[p1_width-1 : 0]),
+	    .TC(tc),
+	    .PRODUCT(duplex_prod[2*p1_width-1 : 0])
+	    );
+
+   DW02_mult #(`DW_p2_width, `DW_p2_width)
+      U2_2 (
+	    .A(a[width-1 : p1_width]),
+	    .B(b[width-1 : p1_width]),
+	    .TC(tc),
+	    .PRODUCT(duplex_prod[2*width-1 : 2*p1_width])
+	    );
+
+   assign  product =  dplx == 1'b0 ? simplex_prod : 
+		      dplx == 1'b1 ? duplex_prod : 
+		      {2*width{1'bx}};
+
+// synopsys translate_on
+
+`undef DW_p2_width
+
+endmodule
+
+
+module DW02_mult(A,B,TC,PRODUCT);
+parameter	integer A_width = 8;
+parameter	integer B_width = 8;
+   
+input	[A_width-1:0]	A;
+input	[B_width-1:0]	B;
+input			TC;
+output	[A_width+B_width-1:0]	PRODUCT;
+
+wire	[A_width+B_width-1:0]	PRODUCT;
+
+wire	[A_width-1:0]	temp_a;
+wire	[B_width-1:0]	temp_b;
+wire	[A_width+B_width-2:0]	long_temp1,long_temp2;
+
+  // synopsys translate_off 
+  //-------------------------------------------------------------------------
+  // Parameter legality check
+  //-------------------------------------------------------------------------
+
+  
+ 
+  initial begin : parameter_check
+    integer param_err_flg;
+
+    param_err_flg = 0;
+    
+    
+    if (A_width < 1) begin
+      param_err_flg = 1;
+      $display(
+	"ERROR: %m :\n  Invalid value (%d) for parameter A_width (lower bound: 1)",
+	A_width );
+    end
+    
+    if (B_width < 1) begin
+      param_err_flg = 1;
+      $display(
+	"ERROR: %m :\n  Invalid value (%d) for parameter B_width (lower bound: 1)",
+	B_width );
+    end 
+  
+    if ( param_err_flg == 1) begin
+      $display(
+        "%m :\n  Simulation aborted due to invalid parameter value(s)");
+      $finish;
+    end
+
+  end // parameter_check 
+
+     
+assign	temp_a = (A[A_width-1])? (~A + 1'b1) : A;
+assign	temp_b = (B[B_width-1])? (~B + 1'b1) : B;
+
+assign	long_temp1 = temp_a * temp_b;
+assign	long_temp2 = ~(long_temp1 - 1'b1);
+
+assign	PRODUCT = ((^(A ^ A) !== 1'b0) || (^(B ^ B) !== 1'b0) || (^(TC ^ TC) !== 1'b0) ) ? {A_width+B_width{1'bX}} :
+		  (TC)? (((A[A_width-1] ^ B[B_width-1]) && (|long_temp1))?
+			 {1'b1,long_temp2} : {1'b0,long_temp1})
+		     : A * B;
+   // synopsys translate_on
+endmodule
+
+

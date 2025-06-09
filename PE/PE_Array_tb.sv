@@ -83,8 +83,8 @@ module pe_array_tb;
 
     
     // simulation
-    parameter INS = KMUL;
-    parameter ALG = KEM_512;
+    parameter INS = KMAC;
+    parameter ALG = KEM_1024;
     parameter WAIT_CYCLE = 7;
     initial begin
         // initialization
@@ -98,8 +98,8 @@ module pe_array_tb;
         #(`CYCLE*0.2)
         instr = INS;
         alg = ALG;
-        data_in[0][0] = 24'd134;
-        data_in[0][1] = 24'd25;
+        data_in[0][0] = 24'd13400;
+        data_in[0][1] = 24'd25000;
         data_in[0][2] = 24'd337;
         data_in[1][0] = 24'd478;
         data_in[1][1] = 24'd571;
