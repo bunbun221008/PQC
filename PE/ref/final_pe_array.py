@@ -348,10 +348,14 @@ class pe_array:
 if __name__ == "__main__":
     # Test the PE array with a simple example
     PA = pe_array(4)
-    PA.reset("KEM-1024", "KMAC")
-    data = np.array([[13400, 478, 7, 109], [25000, 571, 8, 1666], [337, 64, 93, 12]], dtype=np.uint32)
+    PA.reset("DSA-44", "DCP4")
+    data = np.array([[1340, 478, 7, 109], [2, 5, 8, 16], [337, 64, 93, 12]], dtype=np.uint32)
     result = PA.exe(data)
-    print("Result:", result)
-    
+    print("Result1:", result)
+
+    data = np.array([[100, 718, 73, 9], [3, 7, 15, 11], [537, 64, 93, 12]], dtype=np.uint32)
+    result = PA.exe(data)
+    print("Result2:", result)
+
     # Add more tests as needed to validate the functionality
  

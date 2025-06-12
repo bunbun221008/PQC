@@ -83,9 +83,9 @@ module pe_array_tb;
 
     
     // simulation
-    parameter INS = KMAC;
-    parameter ALG = KEM_1024;
-    parameter WAIT_CYCLE = 7;
+    parameter INS = DCP4;
+    parameter ALG = DSA_44;
+    parameter WAIT_CYCLE = 4;
     initial begin
         // initialization
         Clk = 1'b1;
@@ -98,41 +98,60 @@ module pe_array_tb;
         #(`CYCLE*0.2)
         instr = INS;
         alg = ALG;
-        data_in[0][0] = 24'd13400;
-        data_in[0][1] = 24'd25000;
+        data_in[0][0] = 24'd1340;
+        data_in[0][1] = 24'd2;
         data_in[0][2] = 24'd337;
         data_in[1][0] = 24'd478;
-        data_in[1][1] = 24'd571;
+        data_in[1][1] = 24'd5;
         data_in[1][2] = 24'd64;
         data_in[2][0] = 24'd7;
         data_in[2][1] = 24'd8;
         data_in[2][2] = 24'd93;
         data_in[3][0] = 24'd109;
-        data_in[3][1] = 24'd1666;
+        data_in[3][1] = 24'd16;
         data_in[3][2] = 24'd12;
         #(`CYCLE*0.8)
 
         #(`CYCLE*0.2)
-        for( i=0; i<NUM; i=i+1 ) begin
-            for( j=0; j<IN_NUM; j=j+1 ) begin
-                data_in[i][j] = 0;
-            end
-        end
+        instr = INS;
+        alg = ALG;
+        data_in[0][0] = 24'd100;
+        data_in[0][1] = 24'd3;
+        data_in[0][2] = 24'd537;
+        data_in[1][0] = 24'd718;
+        data_in[1][1] = 24'd7;
+        data_in[1][2] = 24'd64;
+        data_in[2][0] = 24'd73;
+        data_in[2][1] = 24'd15;
+        data_in[2][2] = 24'd93;
+        data_in[3][0] = 24'd9;
+        data_in[3][1] = 24'd11;
+        data_in[3][2] = 24'd12;
         #(`CYCLE*0.8);
 
     end
     initial begin   
         #(`CYCLE*WAIT_CYCLE)
 
-        #(`CYCLE*0.2)
+        $display( "data 1" );
+        #(`CYCLE*0.3)
         // display output
         for( i=0; i<NUM; i=i+1 ) begin
             for( j=0; j<OUT_NUM; j=j+1 ) begin
                 $display( "data_out[%0d][%0d] = %d", i, j, data_out[i][j] );
             end
         end
-        #(`CYCLE*0.8)
+        #(`CYCLE*0.7)
 
+        $display( "data 2" );
+        #(`CYCLE*0.3)
+        // display output
+        for( i=0; i<NUM; i=i+1 ) begin
+            for( j=0; j<OUT_NUM; j=j+1 ) begin
+                $display( "data_out[%0d][%0d] = %d", i, j, data_out[i][j] );
+            end
+        end
+        #(`CYCLE*0.7)
 
         
         

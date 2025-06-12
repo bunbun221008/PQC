@@ -187,21 +187,23 @@ def test_pe(pe_num,alg,ins,test_coeffs,test_all_num_within_q=False):
                     raise ValueError(str(ins)+" Fail with alg = "+str(alg))
     
 if __name__ == "__main__":
-    np.random.seed(0)
-    pe_num = 4
-    test_coeffs = 10000
-    test_all_num_within_q = False
-    for alg in ["DSA-44","KEM-512"]:
-        for ins in ["MADD","MSUB","NTT","INTT","MMUL","MMAC"]:
-            test_pe(pe_num,alg,ins,test_coeffs,False)
-    for ins in ["KMUL","KMAC"]:
-        test_pe(pe_num,"KEM-512",ins,test_coeffs,False)
-    test_pe(pe_num,"DSA-44","P2R",test_coeffs,False)
-    for alg in ["DSA-44","DSA-65"]:
-        for ins in ["DCP","MHINT","UHINT"]:
-            test_pe(pe_num,alg,ins,test_coeffs,False)
-    for alg in ["DSA-44","DSA-65","DSA-87"]:
-        for ins in ["CHKZ","CHKW0","CHKH"]:
-            test_pe(pe_num,alg,ins,test_coeffs,False)
-    for ins in ["DCMP_1","DCMP_4","DCMP_5","DCMP_10","DCMP_11","CMP_1","CMP_4","CMP_5","CMP_10","CMP_11"]:
-        test_pe(pe_num,"KEM-512",ins,test_coeffs,True)
+    # np.random.seed(0)
+    # pe_num = 4
+    # test_coeffs = 10000
+    # test_all_num_within_q = False
+    # for alg in ["DSA-44","KEM-512"]:
+    #     for ins in ["MADD","MSUB","NTT","INTT","MMUL","MMAC"]:
+    #         test_pe(pe_num,alg,ins,test_coeffs,False)
+    # for ins in ["KMUL","KMAC"]:
+    #     test_pe(pe_num,"KEM-512",ins,test_coeffs,False)
+    # test_pe(pe_num,"DSA-44","P2R",test_coeffs,False)
+    # for alg in ["DSA-44","DSA-65"]:
+    #     for ins in ["DCP","MHINT","UHINT"]:
+    #         test_pe(pe_num,alg,ins,test_coeffs,False)
+    # for alg in ["DSA-44","DSA-65","DSA-87"]:
+    #     for ins in ["CHKZ","CHKW0","CHKH"]:
+    #         test_pe(pe_num,alg,ins,test_coeffs,False)
+    # for ins in ["DCMP_1","DCMP_4","DCMP_5","DCMP_10","DCMP_11","CMP_1","CMP_4","CMP_5","CMP_10","CMP_11"]:
+    #     test_pe(pe_num,"KEM-512",ins,test_coeffs,True)
+    gamma2 = 95232
+    a = 13

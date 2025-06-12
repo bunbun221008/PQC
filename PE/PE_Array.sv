@@ -1,47 +1,47 @@
 
-typedef enum logic [4:0] {
-    MADD    = 5'd0,
-    MSUB    = 5'd1,
-    MMUL    = 5'd2,
-    MMAC    = 5'd3,
-    PREMUL  = 5'd4,
-    KMUL    = 5'd5,
-    KMAC    = 5'd6,
-    NTT     = 5'd7,
-    INTT    = 5'd8,
-    P2R     = 5'd9,
-    DCP1    = 5'd10,
-    DCP2    = 5'd11,
-    DCP3    = 5'd12,
-    DCP4    = 5'd13,
-    MHINT   = 5'd14,
-    UHINT   = 5'd15,
-    CHKZ    = 5'd16,
-    CHKW0   = 5'd17,
-    CHKH    = 5'd18,
-    NEQL    = 5'd19,
-    DCMP_1  = 5'd20,
-    DCMP_4  = 5'd21,
-    DCMP_5  = 5'd22,
-    DCMP_10 = 5'd23,
-    DCMP_11 = 5'd24,
-    CMP_1   = 5'd25,
-    CMP_4   = 5'd26,
-    CMP_5   = 5'd27,
-    CMP_10  = 5'd28,
-    CMP_11  = 5'd29,
-    SHFL    = 5'd30,
-    BYPASS  = 5'd31
-} pe_instr_t;
+// typedef enum logic [4:0] {
+//     MADD    = 5'd0,
+//     MSUB    = 5'd1,
+//     MMUL    = 5'd2,
+//     MMAC    = 5'd3,
+//     PREMUL  = 5'd4,
+//     KMUL    = 5'd5,
+//     KMAC    = 5'd6,
+//     NTT     = 5'd7,
+//     INTT    = 5'd8,
+//     P2R     = 5'd9,
+//     DCP1    = 5'd10,
+//     DCP2    = 5'd11,
+//     DCP3    = 5'd12,
+//     DCP4    = 5'd13,
+//     MHINT   = 5'd14,
+//     UHINT   = 5'd15,
+//     CHKZ    = 5'd16,
+//     CHKW0   = 5'd17,
+//     CHKH    = 5'd18,
+//     NEQL    = 5'd19,
+//     DCMP_1  = 5'd20,
+//     DCMP_4  = 5'd21,
+//     DCMP_5  = 5'd22,
+//     DCMP_10 = 5'd23,
+//     DCMP_11 = 5'd24,
+//     CMP_1   = 5'd25,
+//     CMP_4   = 5'd26,
+//     CMP_5   = 5'd27,
+//     CMP_10  = 5'd28,
+//     CMP_11  = 5'd29,
+//     SHFL    = 5'd30,
+//     BYPASS  = 5'd31
+// } pe_instr_t;
 
-typedef enum logic [4:0] {
-    KEM_512 = 5'd0,
-    KEM_768 = 5'd1,
-    KEM_1024 = 5'd2,
-    DSA_44 = 5'd3,
-    DSA_65 = 5'd4,
-    DSA_87 = 5'd5
-} pe_alg_t;
+// typedef enum logic [4:0] {
+//     KEM_512 = 5'd0,
+//     KEM_768 = 5'd1,
+//     KEM_1024 = 5'd2,
+//     DSA_44 = 5'd3,
+//     DSA_65 = 5'd4,
+//     DSA_87 = 5'd5
+// } pe_alg_t;
 
 
 module pe_array #(
@@ -65,6 +65,19 @@ module pe_array #(
     logic [WIDTH-1:0] Beta;
     logic [WIDTH-1:0] Gamma1;
     logic [WIDTH-1:0] Gamma2;
+    logic [WIDTH-1:0] D_sub1_ls1_sub1; // (1 << (D - 1)) - 1
+    logic [WIDTH-1:0] Q_sub1_rs1; // (Q - 1) >> 1
+    logic [WIDTH-1:0] Q_sub1_subGamma2; // Q - 1 - Gamma2
+    logic [WIDTH-1:0] Gamma1_subBeta; // Gamma1 - Beta
+    logic [WIDTH-1:0] Alpha_sub1; // Alpha - 1
+    logic [WIDTH-1:0] Gamma2_add1; // Gamma2 + 1
+    logic [WIDTH-1:0] Q_subGamma2; // (Q-Gamma2)
+    logic [WIDTH-1:0] Q_subGamma1_addBeta; // Q - (Gamma1 - Beta)
+    logic [WIDTH-1:0] Q_subGamma2_addBeta; // Q - (Gamma2 - Beta)
+    logic [WIDTH-1:0] Alpha_eql16_1025or11275; // (Alpha == 16)? 1025 : 11275
+    logic [WIDTH-1:0] Alpha_eql16_21or23; // (Alpha == 16)? 21 : 23
+
+
 
 
     ////////////////////////////////// madd declare ////////////////////////////////////
@@ -97,6 +110,8 @@ module pe_array #(
     logic [WIDTH-1:0] mmul_mul_in0[0:NUM-1], mmul_mul_in1[0:NUM-1];
     logic [2*WIDTH-1:0] mmul_mul_out[0:NUM-1];
     logic mmul_dplx_mode;
+    // sft
+    logic [2*WIDTH-1:0] mmul_sft_in0[0:NUM-1], mmul_sft_in1[0:NUM-1], mmul_sft_out[0:NUM-1];
 
     ////////////////////////////// data_in, data_out pipeline declare //////////////////////////////////
     logic [WIDTH-1:0] data_in_p1_w[0:NUM-1][0:IN_NUM-1], data_in_p1_r[0:NUM-1][0:IN_NUM-1];
@@ -123,6 +138,17 @@ module pe_array #(
                 Beta = 120;
                 Gamma1 = 1<<19;
                 Gamma2 = 104;
+                D_sub1_ls1_sub1 =  4095;
+                Q_sub1_rs1 =  1664;
+                Q_sub1_subGamma2 =  3224;
+                Gamma1_subBeta =  524168;
+                Alpha_sub1 =  15;
+                Gamma2_add1 =  105;
+                Q_subGamma2 =  3225;
+                Q_subGamma1_addBeta =  -520839;
+                Q_subGamma2_addBeta =  3345;
+                Alpha_eql16_1025or11275 =  1025;
+                Alpha_eql16_21or23 =  21;
             end
             KEM_768: begin
                 Q = 3329;
@@ -131,6 +157,17 @@ module pe_array #(
                 Beta = 120;
                 Gamma1 = 1<<19;
                 Gamma2 = 104;
+                D_sub1_ls1_sub1 =  4095;
+                Q_sub1_rs1 =  1664;
+                Q_sub1_subGamma2 =  3224;
+                Gamma1_subBeta =  524168;
+                Alpha_sub1 =  15;
+                Gamma2_add1 =  105;;
+                Q_subGamma2 =  3225;
+                Q_subGamma1_addBeta =  -520839;
+                Q_subGamma2_addBeta =  3345;
+                Alpha_eql16_1025or11275 =  1025;
+                Alpha_eql16_21or23 =  21;
             end
             KEM_1024: begin
                 Q = 3329;
@@ -139,6 +176,17 @@ module pe_array #(
                 Beta = 120;
                 Gamma1 = 1<<19;
                 Gamma2 = 104;
+                D_sub1_ls1_sub1 =  4095;
+                Q_sub1_rs1 =  1664;
+                Q_sub1_subGamma2 =  3224;
+                Gamma1_subBeta =  524168;
+                Alpha_sub1 =  15;
+                Gamma2_add1 =  105;
+                Q_subGamma2 =  3225;
+                Q_subGamma1_addBeta =  -520839;
+                Q_subGamma2_addBeta =  3345;
+                Alpha_eql16_1025or11275 =  1025;
+                Alpha_eql16_21or23 =  21;
             end
             DSA_44: begin
                 Q = 8380417;
@@ -147,6 +195,17 @@ module pe_array #(
                 Beta = 78;
                 Gamma1 = 1<<17;
                 Gamma2 = 95232;
+                D_sub1_ls1_sub1 =  4095;
+                Q_sub1_rs1 =  4190208;
+                Q_sub1_subGamma2 =  8285184;
+                Gamma1_subBeta =  130994;
+                Alpha_sub1 =  43;
+                Gamma2_add1 =  95233;
+                Q_subGamma2 =  8285185;
+                Q_subGamma1_addBeta =  8249423;
+                Q_subGamma2_addBeta =  8285263;
+                Alpha_eql16_1025or11275 =  11275;
+                Alpha_eql16_21or23 =  23;
             end
             DSA_65: begin
                 Q = 8380417;
@@ -155,6 +214,17 @@ module pe_array #(
                 Beta = 196;
                 Gamma1 = 1<<19;
                 Gamma2 = 261888; 
+                D_sub1_ls1_sub1 =  4095;
+                Q_sub1_rs1 =  4190208;
+                Q_sub1_subGamma2 =  8118528;
+                Gamma1_subBeta =  524092;
+                Alpha_sub1 =  15;
+                Gamma2_add1 =  261889;
+                Q_subGamma2 =  8118529;
+                Q_subGamma1_addBeta =  7856325;
+                Q_subGamma2_addBeta =  8118725;
+                Alpha_eql16_1025or11275 =  1025;
+                Alpha_eql16_21or23 =  21;
             end
             DSA_87: begin
                 Q = 8380417;
@@ -163,6 +233,17 @@ module pe_array #(
                 Beta = 120; 
                 Gamma1 = 1<<19; 
                 Gamma2 = 261888; 
+                D_sub1_ls1_sub1 =  4095;
+                Q_sub1_rs1 =  4190208;
+                Q_sub1_subGamma2 =  8118528;
+                Gamma1_subBeta =  524168;
+                Alpha_sub1 =  15;
+                Gamma2_add1 =  261889;
+                Q_subGamma2 =  8118529;
+                Q_subGamma1_addBeta =  7856249;
+                Q_subGamma2_addBeta =  8118649;
+                Alpha_eql16_1025or11275 =  1025;
+                Alpha_eql16_21or23 =  21;
             end
             default: begin
                 Q = 8380417;
@@ -171,8 +252,30 @@ module pe_array #(
                 Beta = 120; 
                 Gamma1 = 1<<19; 
                 Gamma2 = 261888; 
+                D_sub1_ls1_sub1 =  4095;
+                Q_sub1_rs1 =  4190208;
+                Q_sub1_subGamma2 =  8118528;
+                Gamma1_subBeta =  524168;
+                Alpha_sub1 =  15;
+                Gamma2_add1 =  261889;
+                Q_subGamma2 =  8118529;
+                Q_subGamma1_addBeta =  7856249;
+                Q_subGamma2_addBeta =  8118649;
+                Alpha_eql16_1025or11275 =  1025;
+                Alpha_eql16_21or23 =  21;
             end
         endcase
+        // D_sub1_ls1_sub1 = (1 << (D - 1)) - 1;
+        // Q_sub1_rs1 = (Q - 1) >> 1;
+        // Q_sub1_subGamma2 = Q - 1 - Gamma2;
+        // Gamma1_subBeta = Gamma1 - Beta;
+        // Alpha_sub1 = Alpha - 1;
+        // Gamma2_add1 = Gamma2 + 1;
+        // Q_subGamma2 = (Q-Gamma2);
+        // Q_subGamma1_addBeta = Q - (Gamma1 - Beta);
+        // Q_subGamma2_addBeta = Q - (Gamma2 - Beta);
+        // Alpha_eql16_1025or11275 = (Alpha == 16)? 1025 : 11275;
+        // Alpha_eql16_21or23 = (Alpha == 16)? 21 : 23;
     end
 
     ////////////////////////////////////////// madd ///////////////////////////////////
@@ -235,7 +338,7 @@ module pe_array #(
                 for (i = 0; i < NUM; i = i+1) begin
                     // madd_add[i] = madd_in0[i] + ((1<<(D-1)) - 1);
                     madd_add_in0[i] = madd_in0[i];
-                    madd_add_in1[i] = (1 << (D - 1)) - 1;
+                    madd_add_in1[i] = D_sub1_ls1_sub1; //(1 << (D - 1)) - 1
                     madd_add[i] = madd_add_out[i];
                     madd_cmp[i] = 0;
                     // madd_sub[i] = madd_add[i] - madd_cmp[i];
@@ -289,7 +392,7 @@ module pe_array #(
                 for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
                     // madd_cmp[i] = (((Q-1)>>1) >= madd_add[i])? 1:0;
-                    madd_cmp_in0[i] = (Q - 1) >> 1;
+                    madd_cmp_in0[i] = Q_sub1_rs1; // (Q - 1) >> 1
                     madd_cmp_in1[i] = madd_add[i];
                     madd_cmp[i] = (madd_cmp_out[i])? 1 : 0;
 
@@ -312,7 +415,7 @@ module pe_array #(
                 for (i = 0; i < NUM; i = i+1) begin
                     madd_add[i] = madd_in0[i];
                     // madd_cmp[i] = ((Q - 1 - Gamma2) >= madd_add[i])? 1:0;
-                    madd_cmp_in0[i] = Q - 1 - Gamma2;
+                    madd_cmp_in0[i] = Q_sub1_subGamma2; // Q - 1 - Gamma2
                     madd_cmp_in1[i] = madd_add[i];
                     madd_cmp[i] = (madd_cmp_out[i])? 1 : 0;
                 
@@ -327,7 +430,7 @@ module pe_array #(
                     // madd_cmp[i] = (madd_add[i] >= 1)? (Alpha - 1):0;
                     madd_cmp_in0[i] = madd_add[i];
                     madd_cmp_in1[i] = 1;
-                    madd_cmp[i] = (madd_cmp_out[i])? (Alpha - 1) : 0;
+                    madd_cmp[i] = (madd_cmp_out[i])? Alpha_sub1 : 0; // Alpha - 1
 
                     madd_sub[i] = madd_cmp[i];
                     madd_sft[i] = (madd_in1[i][0])? madd_sub[i]:0;
@@ -339,7 +442,7 @@ module pe_array #(
                     madd_add[i] = madd_in0[i];
                     // madd_cmp[i] = (madd_add[i] >= (Gamma1 - Beta))? 1:0;
                     madd_cmp_in0[i] = madd_add[i];
-                    madd_cmp_in1[i] = Gamma1 - Beta;
+                    madd_cmp_in1[i] = Gamma1_subBeta; // Gamma1 - Beta
                     madd_cmp[i] = (madd_cmp_out[i])? 1 : 0;
                     madd_sub[i] = madd_cmp[i];
                     madd_sft[i] = madd_sub[i];
@@ -351,7 +454,7 @@ module pe_array #(
                     madd_add[i] = madd_in0[i];
                     // madd_cmp[i] = (madd_add[i] >= (Gamma2 - Beta))? 1:0;
                     madd_cmp_in0[i] = madd_add[i];
-                    madd_cmp_in1[i] = Gamma2 - Beta;
+                    madd_cmp_in1[i] = Gamma1_subBeta; // Gamma1 - Beta
                     madd_cmp[i] = (madd_cmp_out[i])? 1 : 0;
                     madd_sub[i] = madd_cmp[i];
                     madd_sft[i] = madd_sub[i];
@@ -406,7 +509,7 @@ module pe_array #(
 
             // msub_cmp[i] = (msub_sub[i] >= (Gamma2 + 1))? 1 : 0;
             msub_cmp_in0[i] = msub_sub[i];
-            msub_cmp_in1[i] = Gamma2 + 1;
+            msub_cmp_in1[i] = Gamma2_add1; // Gamma2 + 1
             msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
 
             // msub_add[i] = msub_sub[i] + msub_cmp[i];
@@ -591,10 +694,10 @@ module pe_array #(
                     msub_sub[i] = msub_in0[i];
                     // msub_cmp[i] = (msub_sub[i] >= (Gamma2 + 1))? 1 : 0;
                     msub_cmp_in0[i] = msub_sub[i];
-                    msub_cmp_in1[i] = Gamma2 + 1;
+                    msub_cmp_in1[i] = Gamma2_add1; //Gamma2 + 1
                     msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
 
-                    msub_add[i] = msub_cmp[i] | ((msub_sub[i] == (Q-Gamma2))<<1);
+                    msub_add[i] = msub_cmp[i] | ((msub_sub[i] == Q_subGamma2)<<1); // Q - Gamma2
                 end
             end
                 
@@ -618,7 +721,7 @@ module pe_array #(
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
                     // msub_cmp[i] = ((Q - (Gamma1 - Beta)) >= msub_sub[i])? 1 : 0;
-                    msub_cmp_in0[i] = Q - (Gamma1 - Beta);
+                    msub_cmp_in0[i] = Q_subGamma1_addBeta; // Q - (Gamma1 - Beta);
                     msub_cmp_in1[i] = msub_sub[i];
                     msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
 
@@ -630,7 +733,7 @@ module pe_array #(
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
                     // msub_cmp[i] = ((Q - (Gamma2 - Beta)) >= msub_sub[i])? 1 : 0;
-                    msub_cmp_in0[i] = Q - (Gamma2 - Beta);
+                    msub_cmp_in0[i] = Q_subGamma2_addBeta; // Q - (Gamma2 - Beta);
                     msub_cmp_in1[i] = msub_sub[i];
                     msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
 
@@ -642,7 +745,7 @@ module pe_array #(
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
                     // msub_cmp[i] = ((Q - Gamma2) >= msub_sub[i])? 1 : 0;
-                    msub_cmp_in0[i] = Q - Gamma2;
+                    msub_cmp_in0[i] = Q_subGamma2; //Q - Gamma2;
                     msub_cmp_in1[i] = msub_sub[i];
                     msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
 
@@ -654,7 +757,11 @@ module pe_array #(
                 msub_sub[0] = 0;
                 msub_sub[1] = msub_in0[1];
                 msub_sub[2] = 0;
-                msub_sub[3] = Q - msub_in0[3];
+                // msub_sub[3] = Q - msub_in0[3];
+                msub_sub_in0[3] = Q;
+                msub_sub_in1[3] = msub_in0[3];
+                msub_sub[3] = msub_sub_out[3];
+
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_cmp[i] = (msub_sub[i][WIDTH-1])? Q : 0;
                     // msub_add[i] = msub_sub[i] + msub_cmp[i];
@@ -669,7 +776,7 @@ module pe_array #(
                 for (i = 0; i < NUM; i = i+1) begin
                     msub_sub[i] = msub_in0[i];
                     // msub_cmp[i] = ((Q - Gamma2) >= msub_sub[i])? 1 : 0;
-                    msub_cmp_in0[i] = Q - Gamma2;
+                    msub_cmp_in0[i] = Q_subGamma2; //Q - Gamma2;
                     msub_cmp_in1[i] = msub_sub[i];
                     msub_cmp[i] = (msub_cmp_out[i])? 1 : 0;
 
@@ -686,7 +793,7 @@ module pe_array #(
         for (gi = 0; gi < NUM; gi = gi + 1) begin : mr_array
             MR mr (
                 .clk(clk),
-                .mode((alg == DSA_44 || alg == DSA_65 || alg == DSA_87)? 1'b1:1'b0),
+                .mode(((alg == DSA_44) || (alg == DSA_65) || (alg == DSA_87))? 1'b1:1'b0),
                 .d(mmul_red_in[gi][45:0]),
                 .MR_output(MR_output[gi])
             );
@@ -695,14 +802,20 @@ module pe_array #(
 
     generate
         for (gi = 0; gi < NUM; gi = gi + 1) begin : mult_dx_array
-            DW_mult_dx #(WIDTH, WIDTH/2)
+            DW_mult_dx #(WIDTH, 12)
             U1 (
                 .a(mmul_mul_in0[gi]),
                 .b(mmul_mul_in1[gi]),
-                .tc(0),
+                .tc(1'b0),
                 .dplx(mmul_dplx_mode),
                 .product(mmul_mul_out[gi])
             );
+        end
+    endgenerate
+
+    generate
+        for (gi = 0; gi < NUM; gi = gi + 1) begin : mult_r_array
+            assign mmul_sft_out[gi] = mmul_sft_in0[gi] >> mmul_sft_in1[gi];
         end
     endgenerate
     
@@ -720,7 +833,9 @@ module pe_array #(
 
             mmul_red_in[i] = mmul_add_r[i];
             mmul_red[i] = MR_output[i];
-            mmul_sft[i] = mmul_red[i];
+            mmul_sft_in0[i] = mmul_red[i];
+            mmul_sft_in1[i] = Alpha_eql16_21or23; //((Alpha == 16)?  21 : 23);
+            mmul_sft[i] = mmul_sft_out[i];
         end
 
         case (instr)
@@ -746,7 +861,7 @@ module pe_array #(
                     mmul_mul_in0[i] = mmul_in0[i];
                     mmul_mul_in1[i] = mmul_in1[i];
                     mmul_mul_w[i] = mmul_mul_out[i];
-                    mmul_add_w[i] = mmul_mul_r[i][2*WIDTH-1 : WIDTH] + mmul_mul_r[i][WIDTH-1 : 0];
+                    mmul_add_w[i] = mmul_mul_r[i][2*WIDTH-1 : 24] + mmul_mul_r[i][WIDTH-1 : 0];
 
                     mmul_red_in[i] = mmul_add_r[i];
                     mmul_red[i] = MR_output[i];
@@ -759,11 +874,14 @@ module pe_array #(
                     // mmul_mul_w[i] = mmul_in0[i] * ((Alpha == 16)?  1025 : 11275);
                     mmul_dplx_mode = 0;
                     mmul_mul_in0[i] = mmul_in0[i];
-                    mmul_mul_in1[i] = (Alpha == 16)? 1025 : 11275;
+                    mmul_mul_in1[i] = Alpha_eql16_1025or11275; //(Alpha == 16)? 1025 : 11275;
                     mmul_mul_w[i] = mmul_mul_out[i];
 
                     mmul_red[i] = mmul_mul_r[i];
-                    mmul_sft[i] = mmul_red[i] >> ((Alpha == 16)?  21 : 23);
+                    // mmul_sft[i] = mmul_red[i] >> Alpha_eql16_21or23; //((Alpha == 16)?  21 : 23);
+                    mmul_sft_in0[i] = mmul_red[i];
+                    mmul_sft_in1[i] = Alpha_eql16_21or23; //((Alpha == 16)?  21 : 23);
+                    mmul_sft[i] = mmul_sft_out[i];
                 end
             end
             DCMP_1: begin
@@ -787,7 +905,10 @@ module pe_array #(
                     mmul_mul_w[i] = mmul_mul_out[i];
 
                     mmul_red[i] = mmul_mul_r[i];
-                    mmul_sft[i] = mmul_red[i] >> 3;
+                    // mmul_sft[i] = mmul_red[i] >> 3;
+                    mmul_sft_in0[i] = mmul_red[i];
+                    mmul_sft_in1[i] = 3;
+                    mmul_sft[i] = mmul_sft_out[i];
                 end
             end
             DCMP_5: begin
@@ -799,7 +920,10 @@ module pe_array #(
                     mmul_mul_w[i] = mmul_mul_out[i];
 
                     mmul_red[i] = mmul_mul_r[i];
-                    mmul_sft[i] = mmul_red[i] >> 4;
+                    // mmul_sft[i] = mmul_red[i] >> 4;
+                    mmul_sft_in0[i] = mmul_red[i];
+                    mmul_sft_in1[i] = 4;
+                    mmul_sft[i] = mmul_sft_out[i];
                 end
             end
             DCMP_10: begin
@@ -811,7 +935,10 @@ module pe_array #(
                     mmul_mul_w[i] = mmul_mul_out[i];
 
                     mmul_red[i] = mmul_mul_r[i];
-                    mmul_sft[i] = mmul_red[i] >> 9;
+                    // mmul_sft[i] = mmul_red[i] >> 9;
+                    mmul_sft_in0[i] = mmul_red[i];
+                    mmul_sft_in1[i] = 9;
+                    mmul_sft[i] = mmul_sft_out[i];
                 end
             end
             DCMP_11: begin
@@ -823,7 +950,10 @@ module pe_array #(
                     mmul_mul_w[i] = mmul_mul_out[i];
                     
                     mmul_red[i] = mmul_mul_r[i];
-                    mmul_sft[i] = mmul_red[i] >> 10;
+                    // mmul_sft[i] = mmul_red[i] >> 10;
+                    mmul_sft_in0[i] = mmul_red[i];
+                    mmul_sft_in1[i] = 10;
+                    mmul_sft[i] = mmul_sft_out[i];
                 end
             end
             CMP_1: begin
@@ -835,7 +965,10 @@ module pe_array #(
                     mmul_mul_w[i] = mmul_mul_out[i];
 
                     mmul_red[i] = mmul_mul_r[i];
-                    mmul_sft[i] = mmul_red[i] >> 23;
+                    // mmul_sft[i] = mmul_red[i] >> 23;
+                    mmul_sft_in0[i] = mmul_red[i];
+                    mmul_sft_in1[i] = 23;
+                    mmul_sft[i] = mmul_sft_out[i];
                 end
             end
             CMP_4: begin
@@ -847,7 +980,10 @@ module pe_array #(
                     mmul_mul_w[i] = mmul_mul_out[i];
 
                     mmul_red[i] = mmul_mul_r[i];
-                    mmul_sft[i] = mmul_red[i] >> 15;
+                    // mmul_sft[i] = mmul_red[i] >> 15;
+                    mmul_sft_in0[i] = mmul_red[i];
+                    mmul_sft_in1[i] = 15;
+                    mmul_sft[i] = mmul_sft_out[i];
                 end
             end
             CMP_5: begin
@@ -859,7 +995,10 @@ module pe_array #(
                     mmul_mul_w[i] = mmul_mul_out[i];
 
                     mmul_red[i] = mmul_mul_r[i];
-                    mmul_sft[i] = mmul_red[i] >> 15;
+                    // mmul_sft[i] = mmul_red[i] >> 15;
+                    mmul_sft_in0[i] = mmul_red[i];
+                    mmul_sft_in1[i] = 15;
+                    mmul_sft[i] = mmul_sft_out[i];
                 end
             end
             CMP_10: begin
@@ -871,7 +1010,10 @@ module pe_array #(
                     mmul_mul_w[i] = mmul_mul_out[i];
 
                     mmul_red[i] = mmul_mul_r[i];
-                    mmul_sft[i] = mmul_red[i] >> 23;
+                    // mmul_sft[i] = mmul_red[i] >> 23;
+                    mmul_sft_in0[i] = mmul_red[i];
+                    mmul_sft_in1[i] = 23;
+                    mmul_sft[i] = mmul_sft_out[i];
                 end
             end
             CMP_11: begin
@@ -883,7 +1025,10 @@ module pe_array #(
                     mmul_mul_w[i] = mmul_mul_out[i];
 
                     mmul_red[i] = mmul_mul_r[i];
-                    mmul_sft[i] = mmul_red[i] >> 22;
+                    // mmul_sft[i] = mmul_red[i] >> 22;
+                    mmul_sft_in0[i] = mmul_red[i];
+                    mmul_sft_in1[i] = 22;
+                    mmul_sft[i] = mmul_sft_out[i];
                 end
             end
 
